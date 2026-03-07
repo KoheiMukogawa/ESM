@@ -75,6 +75,9 @@
     .ctab-deadline{font-size:10px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;border:1px solid var(--border);color:var(--text3);}
     .ctab-deadline.warn{color:var(--warn);border-color:var(--warn);background:rgba(251,191,36,.08);}
     .ctab-deadline.danger{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.08);}
+    .ctab-done-badge{font-size:11px;color:var(--ok);margin-left:2px;}
+    .ctab.all-done .ctab-name{color:var(--ok);}
+    .ctab.all-done{border-bottom-color:var(--ok)!important;}
     .ctab-settings{font-size:11px;opacity:0;transition:opacity .15s;cursor:pointer;color:var(--text3);}
     .ctab:hover .ctab-settings,.ctab.active .ctab-settings{opacity:.6;}
     .ctab-settings:hover{color:var(--accent)!important;opacity:1!important;}
@@ -428,15 +431,31 @@
       nameEl.addEventListener('input',()=>{c.name=nameEl.textContent.trim();renderTitle();scheduleSave();});
       nameEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();nameEl.blur();}});
       nameEl.addEventListener('click',e=>{if(c.id===activeCompanyId) e.stopPropagation();});
+      // Check if all questions done
+      const qs=c.questions||[];
+      const allDone=qs.length>0&&qs.every(q=>q.done);
+      if(allDone) tab.classList.add('all-done');
+
+      tab.appendChild(nameEl);
+
+      // done badge
+      if(allDone){
+        const doneBadge=document.createElement('span');
+        doneBadge.className='ctab-done-badge'; doneBadge.textContent='✓';
+        tab.appendChild(doneBadge);
+      }
+
+      // deadline badge (separate element, no overlap)
       if(c.deadline){
         const dl=deadlineState(c.deadline);
         if(dl.label){
           const badge=document.createElement('span');
           badge.className='ctab-deadline '+dl.cls;
           badge.textContent=dl.label;
-          tab.appendChild(nameEl); tab.appendChild(badge);
-        } else { tab.appendChild(nameEl); }
-      } else { tab.appendChild(nameEl); }
+          tab.appendChild(badge);
+        }
+      }
+
       const gear=document.createElement('span');
       gear.className='ctab-settings'; gear.textContent='⚙'; gear.title='企業情報';
       gear.addEventListener('click',e=>{e.stopPropagation();infoPanelOpenId=infoPanelOpenId===c.id?null:c.id;renderInfoPanel();});
@@ -491,7 +510,7 @@
       chk.addEventListener('click',e=>{
         e.stopPropagation();
         q.done=!q.done;
-        scheduleSave(); renderSidebar();
+        scheduleSave(); renderSidebar(); renderCompanyTabs();
         // also update done btn if this is active
         const btn=document.getElementById('btnDone');
         if(btn) btn.className='btn-done'+(q.done?' done':'');
@@ -611,7 +630,7 @@
       const q=activeQuestion(); if(!q) return;
       q.done=!q.done;
       card.querySelector('#btnDone').className='btn-done'+(q.done?' done':'');
-      renderSidebar(); scheduleSave();
+      renderSidebar(); renderCompanyTabs(); scheduleSave();
     });
     return card;
   }
