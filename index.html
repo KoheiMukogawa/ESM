@@ -435,8 +435,8 @@
       return;
     }
     empty.style.display='none';
-    let card=area.querySelector('.question-card');
-    if (!card) { card=buildCard(); area.appendChild(card); }
+    const old=area.querySelector('.question-card'); if(old) old.remove();
+    const card=buildCard(); area.appendChild(card);
     fillCard(card, q);
   }
 
