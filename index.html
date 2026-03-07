@@ -115,10 +115,6 @@
     .qitem.active .qitem-label{color:var(--text);}
     .qitem-check.done~.qitem-body .qitem-label{color:var(--ok);}
     .qitem-meta{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
-    .qitem-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--text3);}
-    .qitem-dot.ok{background:var(--ok);}
-    .qitem-dot.warn{background:var(--warn);}
-    .qitem-dot.danger{background:var(--danger);}
     .qitem-del{opacity:0;font-size:11px;color:var(--text3);cursor:pointer;transition:opacity .15s;flex-shrink:0;}
     .qitem:hover .qitem-del{opacity:1;}
     .qitem-del:hover{color:var(--danger);}
@@ -677,8 +673,6 @@
       } else {meta.textContent=count>0?`${count}字`:'未入力';}
       body.appendChild(lbl);body.appendChild(meta);
 
-      const dot=document.createElement('div');
-      dot.className='qitem-dot'+(state!=='none'?' '+state:'');
 
       const del=document.createElement('span');
       del.className='qitem-del';del.textContent='×';
@@ -688,7 +682,7 @@
       const dh=document.createElement('span');
       dh.className='drag-handle';dh.textContent='⋮⋮';dh.title='ドラッグで並び替え';
       item.appendChild(dh);
-      item.appendChild(chk);item.appendChild(body);item.appendChild(dot);item.appendChild(del);
+      item.appendChild(chk);item.appendChild(body);item.appendChild(del);
       item.draggable=true;
       item.dataset.qid=q.id;
       item.addEventListener('dragstart',e=>{e.dataTransfer.setData('qid',q.id);item.classList.add('dragging');});
