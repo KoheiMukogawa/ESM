@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ES文字数カウンター</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f0f11;
+      --surface: #18181c;
+      --surface2: #202026;
+      --border: #2e2e38;
+      --accent: #6c8fff;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --text: #e8e8f0;
+      --text2: #8888a0;
+      --text3: #55556a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Login screen ── */
+    #loginScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 24px;
+    }
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 360px;
+      width: 90%;
+    }
+    .login-box .logo { font-size: 36px; margin-bottom: 16px; }
+    .login-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .login-box p  { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 28px; }
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 20px;
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-google:hover { opacity: 0.9; }
+    .btn-google img { width: 18px; height: 18px; }
+
+    /* ── App ── */
+    #appScreen { display: none; padding-bottom: 80px; }
+
+    /* ── Header ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15,15,17,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header-left { display: flex; flex-direction: column; gap: 3px; }
+    .header-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); }
+    .company-name {
+      font-size: 18px; font-weight: 700; color: var(--text);
+      cursor: pointer;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 1px;
+      transition: border-color 0.2s;
+      display: inline-block;
+    }
+    .company-name:hover { border-color: var(--accent); }
+    .company-name input {
+      background: transparent; border: none; outline: none;
+      color: var(--text); font-family: inherit; font-size: inherit;
+      font-weight: inherit; width: 200px;
+    }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .sync-status {
+      font-size: 11px; color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); transition: background 0.3s; }
+    .sync-dot.syncing { background: var(--warn); animation: pulse 1s infinite; }
+    .sync-dot.synced  { background: var(--ok); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .total-badge {
+      font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text2);
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 12px;
+    }
+    .user-avatar { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); object-fit: cover; }
+    .btn-logout {
+      font-size: 11px; padding: 5px 10px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text3); cursor: pointer; transition: all 0.15s;
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Tabs ── */
+    .tabs-bar {
+      display: flex; align-items: center; gap: 2px;
+      padding: 0 24px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .tabs-bar::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; font-size: 12px; font-weight: 500;
+      color: var(--text3); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: all 0.15s; user-select: none;
+    }
+    .tab:hover { color: var(--text2); background: rgba(255,255,255,0.02); }
+    .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+    .tab-indicator { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+    .tab.active .tab-indicator { background: var(--accent); }
+    .tab-indicator.ok     { background: var(--ok); }
+    .tab-indicator.warn   { background: var(--warn); }
+    .tab-indicator.danger { background: var(--danger); }
+    .tab-close { margin-left: 4px; opacity: 0; color: var(--text3); font-size: 14px; transition: opacity 0.15s; }
+    .tab:hover .tab-close { opacity: 1; }
+    .tab-close:hover { color: var(--danger); }
+    .tab-add { padding: 10px 14px; font-size: 18px; color: var(--text3); cursor: pointer; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
+    .tab-add:hover { color: var(--accent); }
+
+    /* ── Main ── */
+    .main { max-width: 860px; margin: 0 auto; padding: 32px 24px 0; }
+    .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .q-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+    .q-sublabel { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); font-weight: 500; }
+    .q-title-input { background: transparent; border: none; outline: none; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 15px; font-weight: 500; width: 100%; line-height: 1.5; resize: none; }
+    .q-title-input::placeholder { color: var(--text3); }
+    .q-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .q-limit-wrap { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+    .q-limit-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; width: 72px; outline: none; text-align: center; transition: border-color 0.15s; }
+    .q-limit-input:focus { border-color: var(--accent); }
+    .q-textarea { display: block; width: 100%; background: transparent; border: none; outline: none; resize: none; padding: 20px 24px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; line-height: 1.9; min-height: 220px; }
+    .q-textarea::placeholder { color: var(--text3); }
+    .q-footer { padding: 12px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
+    .counter-display { display: flex; align-items: baseline; gap: 4px; }
+    .counter-current { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; transition: color 0.2s; }
+    .counter-sep, .counter-limit { font-family: 'DM Mono', monospace; font-size: 14px; color: var(--text2); }
+    .counter-unit { font-size: 11px; color: var(--text3); margin-left: 4px; }
+    .progress-wrap { flex: 1; max-width: 280px; margin: 0 24px; }
+    .progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 2px; transition: width 0.15s ease, background 0.2s; }
+    .progress-label { font-size: 11px; color: var(--text3); margin-top: 6px; font-family: 'DM Mono', monospace; }
+    .status-badge { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.08em; }
+    .badge-ok     { background: rgba(52,211,153,0.12); color: var(--ok);    border: 1px solid rgba(52,211,153,0.2); }
+    .badge-warn   { background: rgba(251,191,36,0.12);  color: var(--warn);  border: 1px solid rgba(251,191,36,0.2); }
+    .badge-danger { background: rgba(248,113,113,0.12); color: var(--danger);border: 1px solid rgba(248,113,113,0.2); }
+    .badge-none   { background: var(--surface);         color: var(--text3); border: 1px solid var(--border); }
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--text3); }
+    .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; line-height: 1.8; }
+    kbd { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text2); }
+    @media (max-width: 600px) { .progress-wrap { display: none; } .main { padding: 16px 12px 0; } }
+  </style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="logo">✏️</div>
+    <h2>ES文字数カウンター</h2>
+    <p>Googleアカウントでログインすると、<br>どのデバイスからでも作業を続けられます。</p>
+    <button class="btn-google" id="btnLogin">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Googleでログイン
+    </button>
+  </div>
+</div>
+
+<!-- ── App Screen ── -->
+<div id="appScreen">
+  <header>
+    <div class="header-left">
+      <span class="header-label">ES文字数カウンター</span>
+      <div class="company-name" id="companyWrap">
+        <span id="companyDisplay">企業名を入力</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="sync-status">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncLabel">--</span>
+      </div>
+      <div class="total-badge" id="totalBadge">合計 0 字</div>
+      <img class="user-avatar" id="userAvatar" src="" alt="user" style="display:none">
+      <button class="btn-logout" id="btnLogout">ログアウト</button>
+    </div>
+  </header>
+
+  <div class="tabs-bar" id="tabsBar">
+    <div class="tab-add" id="tabAdd" title="質問を追加 (N)">＋</div>
+  </div>
+
+  <div class="main" id="mainArea">
+    <div class="empty-state" id="emptyState">
+      <div class="big">✏️</div>
+      <p>上の <strong>＋</strong> ボタンで質問を追加してください<br>
+      <kbd>N</kbd> キーでも追加できます</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Firebase init ──
+  firebase.initializeApp({
+    apiKey: "AIzaSyAQTCLPNVZiNe0qpBqHEhLu8vEMIWBE4pw",
+    authDomain: "escounter-d9db7.firebaseapp.com",
+    projectId: "escounter-d9db7",
+    storageBucket: "escounter-d9db7.firebasestorage.app",
+    messagingSenderId: "154908912859",
+    appId: "1:154908912859:web:7805346a0fded61433b0fe"
+  });
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  // ── State ──
+  let questions   = [];
+  let activeId    = null;
+  let companyName = '企業名を入力';
+  let currentUser = null;
+  let saveTimer   = null;
+
+  function genId() { return Math.random().toString(36).slice(2, 9); }
+  function countChars(text) { return (text || '').replace(/\n/g, '').length; }
+  function getState(count, limit) {
+    if (!limit || limit <= 0) return 'none';
+    const p = count / limit;
+    if (p >= 1.0) return 'danger';
+    if (p >= 0.9) return 'warn';
+    if (p >= 0.5) return 'ok';
+    return 'none';
+  }
+
+  // ── Sync status ──
+  function setSyncStatus(s) {
+    const dot = document.getElementById('syncDot');
+    const lbl = document.getElementById('syncLabel');
+    dot.className = 'sync-dot';
+    if (s === 'syncing') { dot.classList.add('syncing'); lbl.textContent = '保存中...'; }
+    else if (s === 'synced') { dot.classList.add('synced'); lbl.textContent = '保存済み'; }
+    else { lbl.textContent = '--'; }
+  }
+
+  // ── Firestore (debounced 1.5s) ──
+  function scheduleSave() {
+    setSyncStatus('syncing');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveToCloud, 1500);
+  }
+
+  async function saveToCloud() {
+    if (!currentUser) return;
+    try {
+      await db.collection('users').doc(currentUser.uid).set({
+        companyName, questions, activeId,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      setSyncStatus('synced');
+    } catch(e) { console.error(e); setSyncStatus('idle'); }
+  }
+
+  async function loadFromCloud() {
+    if (!currentUser) return;
+    try {
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      if (doc.exists) {
+        const d = doc.data();
+        questions   = d.questions   || [];
+        companyName = d.companyName || '企業名を入力';
+        activeId    = d.activeId    || null;
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  // ── Auth ──
+  document.getElementById('btnLogin').addEventListener('click', () => {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  });
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    if (confirm('ログアウトしますか？')) auth.signOut();
+  });
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      const av = document.getElementById('userAvatar');
+      if (user.photoURL) { av.src = user.photoURL; av.style.display = 'block'; }
+      await loadFromCloud();
+      if (activeId && !questions.find(q => q.id === activeId)) {
+        activeId = questions.length > 0 ? questions[0].id : null;
+      }
+      document.getElementById('companyDisplay').textContent = companyName;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display   = 'block';
+      setSyncStatus('synced');
+      render();
+    } else {
+      currentUser = null;
+      questions = []; activeId = null; companyName = '企業名を入力';
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('appScreen').style.display   = 'none';
+    }
+  });
+
+  // ── Render ──
+  function render() { renderTabs(); renderMain(); renderTitle(); updateTotalBadge(); }
+
+  function renderTitle() {
+    document.title = (!companyName || companyName === '企業名を入力')
+      ? 'ES文字数カウンター' : companyName;
+  }
+
+  function renderTabs() {
+    const bar = document.getElementById('tabsBar');
+    bar.querySelectorAll('.tab').forEach(t => t.remove());
+    const add = document.getElementById('tabAdd');
+    questions.forEach((q, i) => {
+      const state = getState(countChars(q.text), q.limit);
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (q.id === activeId ? ' active' : '');
+      const dot = document.createElement('span');
+      dot.className = `tab-indicator ${state !== 'none' ? state : ''}`;
+      const lbl = document.createElement('span');
+      lbl.textContent = q.label || `質問 ${i+1}`;
+      const cls = document.createElement('span');
+      cls.className = 'tab-close'; cls.textContent = '×';
+      cls.addEventListener('click', e => { e.stopPropagation(); removeQuestion(q.id); });
+      tab.appendChild(dot); tab.appendChild(lbl); tab.appendChild(cls);
+      tab.addEventListener('click', () => { activeId = q.id; render(); scheduleSave(); });
+      bar.insertBefore(tab, add);
+    });
+  }
+
+  function renderMain() {
+    const area  = document.getElementById('mainArea');
+    const empty = document.getElementById('emptyState');
+    const q     = questions.find(q => q.id === activeId);
+    if (!q) {
+      empty.style.display = 'block';
+      const old = area.querySelector('.question-card'); if (old) old.remove();
+      return;
+    }
+    empty.style.display = 'none';
+    let card = area.querySelector('.question-card');
+    if (!card) { card = buildCard(); area.appendChild(card); }
+    fillCard(card, q);
+  }
+
+  function buildCard() {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.innerHTML = `
+      <div class="q-header">
+        <span class="q-sublabel">質問文</span>
+        <textarea class="q-title-input" rows="2" placeholder="例：学生時代に最も力を入れたことを教えてください（400字）" id="cardLabel"></textarea>
+        <div class="q-meta">
+          <div class="q-limit-wrap">
+            <span>文字数制限</span>
+            <input type="number" class="q-limit-input" id="cardLimit" min="0" max="9999" placeholder="400">
+            <span>字</span>
+          </div>
+          <span style="font-size:11px;color:var(--text3)">※ 制限なしの場合は空欄</span>
+        </div>
+      </div>
+      <textarea class="q-textarea" id="cardText" placeholder="ここに文章を入力..."></textarea>
+      <div class="q-footer">
+        <div class="counter-display">
+          <span class="counter-current" id="cardCurrent">0</span>
+          <span class="counter-sep" id="cardSep"></span>
+          <span class="counter-limit" id="cardLimitDisplay"></span>
+          <span class="counter-unit">字</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%;background:var(--text3)"></div></div>
+          <div class="progress-label" id="progressLabel"></div>
+        </div>
+        <span class="status-badge badge-none" id="cardBadge">未入力</span>
+      </div>`;
+    card.querySelector('#cardLabel').addEventListener('input', e => {
+      const q = questions.find(q => q.id === activeId);
+      if (q) { q.label = e.target.value; renderTabs(); renderTitle(); scheduleSave(); }
+    });
+    card.querySelector('#cardLimit').addEventListener('input', e => {
+      const q = questions.find(q => q.id === activeId);
+      if (q) { q.limit = parseInt(e.target.value) || 0; updateCounter(card, q); scheduleSave(); }
+    });
+    card.querySelector('#cardText').addEventListener('input', e => {
+      const q = questions.find(q => q.id === activeId);
+      if (q) { q.text = e.target.value; updateCounter(card, q); renderTabs(); scheduleSave(); }
+    });
+    card.querySelector('#cardText').addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.max(220, this.scrollHeight) + 'px';
+    });
+    return card;
+  }
+
+  function fillCard(card, q) {
+    card.querySelector('#cardLabel').value = q.label || '';
+    card.querySelector('#cardLimit').value = q.limit || '';
+    const ta = card.querySelector('#cardText');
+    ta.value = q.text || '';
+    ta.style.height = 'auto';
+    ta.style.height = Math.max(220, ta.scrollHeight) + 'px';
+    updateCounter(card, q);
+  }
+
+  function updateCounter(card, q) {
+    const count = countChars(q.text);
+    const limit = q.limit || 0;
+    const state = getState(count, limit);
+    const cm = { none:'var(--text)', ok:'var(--ok)', warn:'var(--warn)', danger:'var(--danger)' };
+    const bc = { none:'badge-none', ok:'badge-ok', warn:'badge-warn', danger:'badge-danger' };
+    const bl = { none: count===0?'未入力':'入力中', ok:'記入中', warn:'残り少', danger:'超過！' };
+    card.querySelector('#cardCurrent').textContent  = count;
+    card.querySelector('#cardCurrent').style.color  = cm[state];
+    if (limit > 0) {
+      card.querySelector('#cardSep').textContent          = ' / ';
+      card.querySelector('#cardLimitDisplay').textContent = limit;
+      const pct = Math.min(100, (count/limit)*100);
+      card.querySelector('#progressFill').style.width      = pct+'%';
+      card.querySelector('#progressFill').style.background = cm[state];
+      const rem = limit - count;
+      card.querySelector('#progressLabel').textContent = rem>=0
+        ? `残り ${rem} 字 (${pct.toFixed(0)}%)`
+        : `${Math.abs(rem)} 字 超過`;
+    } else {
+      card.querySelector('#cardSep').textContent          = '';
+      card.querySelector('#cardLimitDisplay').textContent = '';
+      card.querySelector('#progressFill').style.width     = '0%';
+      card.querySelector('#progressLabel').textContent    = '';
+    }
+    card.querySelector('#cardBadge').className   = `status-badge ${bc[state]}`;
+    card.querySelector('#cardBadge').textContent = bl[state];
+    updateTotalBadge();
+  }
+
+  function updateTotalBadge() {
+    const total = questions.reduce((s,q) => s + countChars(q.text), 0);
+    document.getElementById('totalBadge').textContent = `合計 ${total} 字`;
+  }
+
+  function addQuestion() {
+    const id = genId();
+    questions.push({ id, label:'', text:'', limit:0 });
+    activeId = id;
+    render(); scheduleSave();
+    setTimeout(() => { const el = document.getElementById('cardLabel'); if (el) el.focus(); }, 50);
+  }
+
+  function removeQuestion(id) {
+    const idx = questions.findIndex(q => q.id === id);
+    questions.splice(idx, 1);
+    if (activeId === id) activeId = questions.length > 0 ? questions[Math.max(0,idx-1)].id : null;
+    render(); scheduleSave();
+  }
+
+  // ── Company name ──
+  document.getElementById('companyWrap').addEventListener('click', () => {
+    const display = document.getElementById('companyDisplay');
+    if (display.tagName === 'INPUT') return;
+    const input = document.createElement('input');
+    input.value = companyName === '企業名を入力' ? '' : companyName;
+    input.placeholder = '企業名'; input.id = 'companyDisplay';
+    display.replaceWith(input); input.focus();
+    function commit() {
+      companyName = input.value.trim() || '企業名を入力';
+      const span = document.createElement('span');
+      span.id = 'companyDisplay'; span.textContent = companyName;
+      input.replaceWith(span); renderTitle(); scheduleSave();
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); commit(); } });
+  });
+
+  // ── Keyboard ──
+  document.addEventListener('keydown', e => {
+    const tag = document.activeElement.tagName;
+    if (tag==='INPUT' || tag==='TEXTAREA') return;
+    if (e.key==='n' || e.key==='N') addQuestion();
+    if (e.key==='ArrowRight' || e.key==='ArrowLeft') {
+      const idx = questions.findIndex(q => q.id===activeId);
+      if (idx===-1) return;
+      const next = e.key==='ArrowRight'
+        ? (idx+1)%questions.length
+        : (idx-1+questions.length)%questions.length;
+      activeId = questions[next].id; render(); scheduleSave();
+    }
+  });
+
+  document.getElementById('tabAdd').addEventListener('click', addQuestion);
+</script>
+</body>
+</html>
