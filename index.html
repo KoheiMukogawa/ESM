@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ES Manager</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%236c8fff"/><text x="50%25" y="50%25" dominant-baseline="central" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="14" fill="white">ES</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -233,7 +234,10 @@
 <div id="appScreen">
   <header>
     <div class="header-top">
-      <span class="header-title">ES Manager</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+          <svg width="28" height="28" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="7" fill="#6c8fff"/><text x="50%" y="51%" dominant-baseline="central" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="14" fill="white">ES</text></svg>
+          <span class="header-title">ES Manager</span>
+        </div>
       <div class="header-right">
         <span class="theme-icon" id="themeIcon">🌙</span>
         <button class="theme-toggle" id="themeToggle" title="テーマ切り替え"></button>
@@ -491,8 +495,7 @@
   function render(){renderCompanyTabs();renderInfoPanel();renderSidebar();renderMain();renderTitle();}
 
   function renderTitle(){
-    const c=activeCompany();
-    document.title=c?(c.name||'ES Manager'):'ES Manager';
+    document.title='ES Manager';
   }
 
   function deadlineState(dl){
