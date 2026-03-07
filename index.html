@@ -40,13 +40,7 @@
     #appScreen{display:none;flex-direction:column;height:100vh;}
 
     /* ── Header ── */
-    header{
-      position:sticky;top:0;z-index:100;
-      background:var(--header-bg);backdrop-filter:blur(12px);
-      border-bottom:1px solid var(--border);
-      transition:background .2s;
-      flex-shrink:0;
-    }
+    header{position:sticky;top:0;z-index:100;background:var(--header-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:background .2s;flex-shrink:0;}
     .header-top{padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
     .header-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text3);font-weight:700;}
     .header-right{display:flex;align-items:center;gap:10px;}
@@ -59,68 +53,30 @@
     .sync-dot.syncing{background:var(--warn);animation:pulse 1s infinite;}
     .sync-dot.synced{background:var(--ok);}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .total-badge{font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;}
     .user-avatar{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);object-fit:cover;}
-    .btn-logout{font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;transition:all .15s;}
-    .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
-    .btn-save{font-size:11px;padding:4px 12px;background:var(--accent);border:1px solid transparent;border-radius:6px;color:#fff;cursor:pointer;transition:all .15s;font-weight:600;}
-    .btn-save:hover{opacity:.85;}
-    .btn-save:disabled{background:var(--ok);cursor:default;opacity:.7;}
     .btn-help{font-size:13px;width:26px;height:26px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
     .btn-help:hover{border-color:var(--accent);color:var(--accent);}
-    /* Modal */
-    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:20px;}
-    .modal-bg.open{display:flex;}
-    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow);}
-    .modal-head{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .modal-head h2{font-size:16px;font-weight:700;}
-    .modal-close{font-size:18px;cursor:pointer;color:var(--text3);background:none;border:none;line-height:1;}
-    .modal-close:hover{color:var(--text);}
-    .modal-body{padding:20px 24px;}
-    .modal-section{margin-bottom:22px;}
-    .modal-section:last-child{margin-bottom:0;}
-    .modal-section h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px;}
-    .modal-section p,.modal-section li{font-size:13px;color:var(--text2);line-height:1.8;}
-    .modal-section ul{padding-left:16px;}
-    .modal-section li{margin-bottom:4px;}
-    .modal-tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);margin:0 2px;}
-    /* Add company modal */
-    .add-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:20px;}
-    .add-modal-bg.open{display:flex;}
-    .add-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:460px;width:100%;box-shadow:var(--shadow);}
-    .add-modal-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-    .add-modal-head h2{font-size:15px;font-weight:700;}
-    .add-modal-body{padding:18px 22px;display:flex;flex-direction:column;gap:14px;}
-    .add-modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
-    .add-modal-field{display:flex;flex-direction:column;gap:5px;}
-    .add-modal-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
-    .add-modal-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;transition:border-color .15s;width:100%;}
-    .add-modal-input:focus{border-color:var(--accent);}
-    .add-modal-input::placeholder{color:var(--text3);}
-    .btn-primary{padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
-    .btn-primary:hover{opacity:.85;}
-    .btn-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:13px;cursor:pointer;transition:all .15s;}
-    .btn-cancel:hover{border-color:var(--text2);color:var(--text2);}
+    .btn-logout{font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;transition:all .15s;}
+    .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
 
     /* ── Company tabs ── */
     .company-tabs{display:flex;align-items:center;gap:2px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
     .company-tabs::-webkit-scrollbar{display:none;}
     .ctab{display:flex;align-items:center;gap:5px;padding:9px 14px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none;max-width:200px;flex-shrink:0;}
-    .ctab.active{max-width:none;}
     .ctab:hover{color:var(--text2);background:rgba(108,143,255,.04);}
-    .ctab.active{color:var(--text);border-bottom-color:var(--accent);}
+    .ctab.active{color:var(--text);border-bottom-color:var(--accent);max-width:none;}
     .ctab-name{outline:none;background:transparent;border:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;cursor:pointer;min-width:30px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;}
     .ctab.active .ctab-name{cursor:text;max-width:none;overflow:visible;text-overflow:clip;}
     .ctab-deadline{font-size:10px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;border:1px solid var(--border);color:var(--text3);flex-shrink:0;white-space:nowrap;}
     .ctab-deadline.warn{color:var(--warn);border-color:var(--warn);background:rgba(251,191,36,.08);}
     .ctab-deadline.danger{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.08);}
-    .ctab-done-badge{font-size:11px;color:var(--ok);margin-left:2px;}
+    .ctab-done-badge{font-size:11px;color:var(--ok);flex-shrink:0;}
     .ctab.all-done .ctab-name{color:var(--ok);}
     .ctab.all-done{border-bottom-color:var(--ok)!important;}
-    .ctab-settings{font-size:11px;opacity:0;transition:opacity .15s;cursor:pointer;color:var(--text3);}
+    .ctab-settings{font-size:11px;opacity:0;transition:opacity .15s;cursor:pointer;color:var(--text3);flex-shrink:0;}
     .ctab:hover .ctab-settings,.ctab.active .ctab-settings{opacity:.6;}
     .ctab-settings:hover{color:var(--accent)!important;opacity:1!important;}
-    .ctab-close{opacity:0;color:var(--text3);font-size:13px;transition:opacity .15s;}
+    .ctab-close{opacity:0;color:var(--text3);font-size:13px;transition:opacity .15s;flex-shrink:0;}
     .ctab:hover .ctab-close{opacity:1;}
     .ctab-close:hover{color:var(--danger);}
     .ctab-add{padding:8px 12px;font-size:18px;color:var(--text3);cursor:pointer;border-radius:4px;transition:color .15s;flex-shrink:0;}
@@ -137,71 +93,40 @@
     .btn-open-url{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
     .btn-open-url:hover{background:rgba(108,143,255,.1);}
 
-    /* ── Body (sidebar + main) ── */
-    .app-body{display:flex;flex:1;overflow:hidden;height:calc(100vh - var(--header-h, 88px));}
+    /* ── Body ── */
+    .app-body{display:flex;flex:1;overflow:hidden;}
 
     /* ── Sidebar ── */
-    .sidebar{
-      width:220px;flex-shrink:0;
-      background:var(--sidebar-bg);
-      border-right:1px solid var(--border);
-      display:flex;flex-direction:column;
-      overflow:hidden;
-    }
-    .sidebar-header{
-      padding:10px 14px 8px;
-      font-size:10px;letter-spacing:.15em;text-transform:uppercase;
-      color:var(--text3);font-weight:500;
-      border-bottom:1px solid var(--border);
-      display:flex;align-items:center;justify-content:space-between;
-    }
+    .sidebar{width:220px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+    .sidebar-header{padding:10px 14px 8px;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
     .sidebar-add{font-size:16px;cursor:pointer;color:var(--text3);transition:color .15s;line-height:1;}
     .sidebar-add:hover{color:var(--accent);}
     .sidebar-list{flex:1;overflow-y:auto;padding:6px 0;}
     .sidebar-list::-webkit-scrollbar{width:4px;}
     .sidebar-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-    .qitem{
-      display:flex;align-items:center;gap:8px;
-      padding:8px 14px;cursor:pointer;
-      transition:background .12s;
-      border-left:2px solid transparent;
-      position:relative;
-    }
+    .qitem{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .12s;border-left:2px solid transparent;}
     .qitem:hover{background:rgba(108,143,255,.05);}
     .qitem.active{background:rgba(108,143,255,.08);border-left-color:var(--accent);}
-
-    .qitem-check{
-      width:16px;height:16px;flex-shrink:0;
-      border-radius:50%;border:1.5px solid var(--border);
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer;transition:all .15s;font-size:9px;
-      background:transparent;
-    }
+    .qitem-check{width:16px;height:16px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:9px;background:transparent;}
     .qitem-check:hover{border-color:var(--ok);}
     .qitem-check.done{border-color:var(--ok);background:var(--ok);color:#fff;}
-
     .qitem-body{flex:1;min-width:0;}
     .qitem-label{font-size:12px;font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
     .qitem.active .qitem-label{color:var(--text);}
-    .qitem-check.done ~ .qitem-body .qitem-label{color:var(--ok);}
+    .qitem-check.done~.qitem-body .qitem-label{color:var(--ok);}
     .qitem-meta{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
-
     .qitem-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--text3);}
     .qitem-dot.ok{background:var(--ok);}
     .qitem-dot.warn{background:var(--warn);}
     .qitem-dot.danger{background:var(--danger);}
-
     .qitem-del{opacity:0;font-size:11px;color:var(--text3);cursor:pointer;transition:opacity .15s;flex-shrink:0;}
     .qitem:hover .qitem-del{opacity:1;}
     .qitem-del:hover{color:var(--danger);}
 
-    /* ── Main content ── */
+    /* ── Main ── */
     .main-content{flex:1;overflow-y:auto;padding:24px;}
     .main-content::-webkit-scrollbar{width:6px;}
     .main-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-
-    /* ── Question card ── */
     .question-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);max-width:820px;margin:0 auto;}
     .q-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
     .q-sublabel{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);font-weight:500;}
@@ -211,19 +136,11 @@
     .q-limit-wrap{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);}
     .q-limit-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;width:72px;outline:none;text-align:center;transition:border-color .15s;}
     .q-limit-input:focus{border-color:var(--accent);}
-
-    /* ── Draft bar ── */
     .draft-bar{display:flex;align-items:center;gap:6px;padding:9px 22px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
     .draft-bar::-webkit-scrollbar{display:none;}
     .draft-bar-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);font-weight:500;flex-shrink:0;}
     .draft-pills{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-    .draft-pill{
-      display:flex;align-items:center;gap:4px;
-      padding:4px 10px;font-size:12px;font-weight:500;
-      border-radius:20px;border:1px solid var(--border);
-      background:transparent;color:var(--text3);cursor:pointer;
-      transition:all .15s;white-space:nowrap;
-    }
+    .draft-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;font-weight:500;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;}
     .draft-pill:hover{border-color:var(--accent);color:var(--text2);}
     .draft-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;}
     .draft-name{outline:none;background:transparent;border:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;cursor:pointer;min-width:32px;max-width:100px;}
@@ -234,11 +151,8 @@
     .draft-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0;}
     .btn-draft{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;}
     .btn-draft:hover{border-color:var(--accent);color:var(--accent);}
-
     .q-textarea{display:block;width:100%;background:transparent;border:none;outline:none;resize:none;padding:18px 22px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;line-height:1.9;min-height:220px;}
     .q-textarea::placeholder{color:var(--text3);}
-
-    /* ── Footer ── */
     .q-footer{padding:12px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
     .counter-display{display:flex;align-items:baseline;gap:4px;}
     .counter-current{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1;transition:color .2s;}
@@ -248,31 +162,56 @@
     .progress-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
     .progress-fill{height:100%;border-radius:2px;transition:width .15s ease,background .2s;}
     .progress-label{font-size:11px;color:var(--text3);margin-top:6px;font-family:'DM Mono',monospace;}
-
-    /* Done toggle button (replaces badge) */
-    .btn-done{
-      width:32px;height:32px;border-radius:50%;
-      border:1.5px solid var(--border);background:transparent;
-      cursor:pointer;display:flex;align-items:center;justify-content:center;
-      font-size:14px;transition:all .15s;flex-shrink:0;
-      color:var(--text3);
-    }
+    .btn-done{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0;color:var(--text3);}
     .btn-done:hover{border-color:var(--ok);color:var(--ok);}
     .btn-done.done{border-color:var(--ok);background:var(--ok);color:#fff;}
-
-    /* ── Empty ── */
     .empty-state{text-align:center;padding:60px 24px;color:var(--text3);}
     .empty-state .big{font-size:40px;margin-bottom:12px;}
     .empty-state p{font-size:13px;line-height:1.8;}
 
-    @media(max-width:640px){
-      .sidebar{width:180px;}
-      .progress-wrap{display:none;}
-    }
+    /* ── Modals (shared base) ── */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:20px;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;box-shadow:var(--shadow);}
+    .modal-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-head h2{font-size:15px;font-weight:700;}
+    .modal-close{font-size:18px;cursor:pointer;color:var(--text3);background:none;border:none;line-height:1;}
+    .modal-close:hover{color:var(--text);}
+    .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+    .btn-primary{padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+    .btn-primary:hover{opacity:.85;}
+    .btn-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:13px;cursor:pointer;transition:all .15s;}
+    .btn-cancel:hover{border-color:var(--text2);color:var(--text2);}
+
+    /* ── Add company modal ── */
+    #addCompanyModal{max-width:460px;}
+    .modal-body{padding:18px 22px;display:flex;flex-direction:column;gap:14px;}
+    .modal-field{display:flex;flex-direction:column;gap:5px;}
+    .modal-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
+    .modal-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;transition:border-color .15s;width:100%;}
+    .modal-input:focus{border-color:var(--accent);}
+    .modal-input::placeholder{color:var(--text3);}
+
+    /* ── Help modal ── */
+    #helpModal{max-width:560px;max-height:85vh;overflow-y:auto;}
+    .help-body{padding:20px 24px;}
+    .help-section{margin-bottom:22px;}
+    .help-section:last-child{margin-bottom:0;}
+    .help-section h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px;}
+    .help-section p{font-size:13px;color:var(--text2);line-height:1.8;}
+    .help-section ul{padding-left:16px;}
+    .help-section li{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:4px;}
+    .htag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);margin:0 2px;}
+    .save-legend{display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap;}
+    .save-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);}
+    .dot-ex{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+    @media(max-width:640px){.sidebar{width:180px;}.progress-wrap{display:none;}}
   </style>
 </head>
 <body>
 
+<!-- ── Login ── -->
 <div id="loginScreen">
   <div class="login-box">
     <div class="logo">✏️</div>
@@ -285,8 +224,9 @@
   </div>
 </div>
 
+<!-- ── App ── -->
 <div id="appScreen">
-  <header id="mainHeader">
+  <header>
     <div class="header-top">
       <span class="header-title">ES Manager</span>
       <div class="header-right">
@@ -297,16 +237,13 @@
           <span id="syncLabel">--</span>
         </div>
         <img class="user-avatar" id="userAvatar" src="" alt="" style="display:none">
-        <button class="btn-save" id="btnSave">💾 保存</button>
         <button class="btn-help" id="btnHelp" title="使い方">?</button>
         <button class="btn-logout" id="btnLogout">ログアウト</button>
       </div>
     </div>
-    <!-- 企業タブ -->
     <div class="company-tabs" id="companyTabs">
       <div class="ctab-add" id="companyAdd" title="企業を追加">＋</div>
     </div>
-    <!-- 企業情報パネル -->
     <div class="info-panel" id="infoPanel">
       <div class="info-field">
         <span class="info-field-label">URL</span>
@@ -324,16 +261,14 @@
     </div>
   </header>
 
-  <div class="app-body" id="appBody">
-    <!-- 左サイドバー：設問リスト -->
-    <div class="sidebar" id="sidebar">
+  <div class="app-body">
+    <div class="sidebar">
       <div class="sidebar-header">
         <span>設問</span>
         <span class="sidebar-add" id="questionAdd" title="設問を追加">＋</span>
       </div>
       <div class="sidebar-list" id="sidebarList"></div>
     </div>
-    <!-- メインコンテンツ -->
     <div class="main-content" id="mainContent">
       <div class="empty-state" id="emptyState">
         <div class="big">✏️</div>
@@ -343,72 +278,96 @@
   </div>
 </div>
 
-<!-- Add Company Modal -->
-<div class="add-modal-bg" id="addCompanyModalBg">
-  <div class="add-modal">
-    <div class="add-modal-head">
+<!-- ── Add Company Modal ── -->
+<div class="modal-bg" id="addCompanyBg">
+  <div class="modal" id="addCompanyModal">
+    <div class="modal-head">
       <h2>🏢 企業を追加</h2>
-      <button class="modal-close" id="addCompanyModalClose">×</button>
+      <button class="modal-close" id="addCompanyClose">×</button>
     </div>
-    <div class="add-modal-body">
-      <div class="add-modal-field">
-        <label class="add-modal-label">企業名 <span style="color:var(--danger)">*</span></label>
-        <input class="add-modal-input" id="newCompanyName" type="text" placeholder="例：JAL自社養成">
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">企業名 <span style="color:var(--danger)">*</span></label>
+        <input class="modal-input" id="newName" type="text" placeholder="例：JAL自社養成">
       </div>
-      <div class="add-modal-field">
-        <label class="add-modal-label">マイページ URL</label>
-        <input class="add-modal-input" id="newCompanyUrl" type="url" placeholder="https://...">
+      <div class="modal-field">
+        <label class="modal-label">マイページ URL</label>
+        <input class="modal-input" id="newUrl" type="url" placeholder="https://...">
       </div>
-      <div class="add-modal-field">
-        <label class="add-modal-label">ログイン ID</label>
-        <input class="add-modal-input" id="newCompanyId" type="text" placeholder="メールアドレス等">
+      <div class="modal-field">
+        <label class="modal-label">ログイン ID</label>
+        <input class="modal-input" id="newLoginId" type="text" placeholder="メールアドレス等">
       </div>
-      <div class="add-modal-field">
-        <label class="add-modal-label">提出期限</label>
-        <input class="add-modal-input" id="newCompanyDeadline" type="date">
+      <div class="modal-field">
+        <label class="modal-label">提出期限</label>
+        <input class="modal-input" id="newDeadline" type="date" style="max-width:180px;">
       </div>
     </div>
-    <div class="add-modal-foot">
+    <div class="modal-foot">
       <button class="btn-cancel" id="addCompanyCancel">キャンセル</button>
       <button class="btn-primary" id="addCompanyConfirm">追加する</button>
     </div>
   </div>
 </div>
 
-<!-- Help Modal -->
-<div class="modal-bg" id="modalBg">
-  <div class="modal">
+<!-- ── Help Modal ── -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" id="helpModal">
     <div class="modal-head">
       <h2>✏️ ES Manager 使い方ガイド</h2>
-      <button class="modal-close" id="modalClose">×</button>
+      <button class="modal-close" id="helpClose">×</button>
     </div>
-    <div class="modal-body">
-      <div class="modal-section">
+    <div class="help-body">
+
+      <div class="help-section">
         <h3>💾 保存の仕組み</h3>
-        <p>入力が止まってから<strong>10秒後</strong>に自動でクラウドに保存されます。すぐ保存したいときはヘッダーの <span class="modal-tag">💾 保存</span> ボタン、またはブラウザを閉じる際にも自動で保存が走ります。</p>
-        <p style="margin-top:8px;">右上の●インジケーターで状態が確認できます。<br>
-        <span style="color:var(--warn)">●</span> 保存中　<span style="color:var(--ok)">●</span> 保存済み</p>
+        <p>文字を打ち終えてから <strong>10秒後</strong> に自動でクラウドへ保存されます。すぐ保存したいときはヘッダーの <span class="htag">💾 保存</span> ボタンを押してください。ブラウザを閉じる際にも自動で保存が走ります。</p>
+        <div class="save-legend">
+          <div class="save-legend-item"><div class="dot-ex" style="background:var(--warn)"></div>保存中（黄点滅）</div>
+          <div class="save-legend-item"><div class="dot-ex" style="background:var(--ok)"></div>保存済み（緑点灯）</div>
+        </div>
       </div>
-      <div class="modal-section">
+
+      <div class="help-section">
         <h3>☁️ データの保存先</h3>
-        <p>データはGoogleアカウントに紐づいてクラウド（Firebase）に保存されます。同じGoogleアカウントでログインすれば、スマホ・PCどのデバイスからでも同じデータにアクセスできます。他の人のデータは見えません。</p>
+        <p>データはGoogleアカウントに紐づいてFirebase（Googleのクラウド）に保存されます。同じGoogleアカウントでログインすれば、スマホ・PC・どのブラウザからでも同じデータを開けます。</p>
+        <p style="margin-top:8px;padding:10px 14px;background:rgba(108,143,255,.08);border:1px solid var(--accent);border-radius:8px;color:var(--text);">
+          🔒 <strong>天才向川君でも、皆さんのESは覗けません。</strong><br>
+          <span style="font-size:12px;color:var(--text2);">データはGoogleアカウント単位で完全に分離されており、作成者を含む他の誰もアクセスできない仕組みになっています。</span>
+        </p>
       </div>
-      <div class="modal-section">
-        <h3>🏢 基本操作</h3>
+
+      <div class="help-section">
+        <h3>🏢 企業の追加</h3>
         <ul>
-          <li>上部の企業タブ右端 <span class="modal-tag">＋</span> で企業を追加</li>
-          <li>左サイドバーの <span class="modal-tag">＋</span> で設問を追加</li>
-          <li>設問文と文字数制限を入力して本文を書く</li>
-          <li>草案バーで <span class="modal-tag">＋ 追加</span> や <span class="modal-tag">複製</span> をして書き比べができる</li>
-          <li>草案名はクリックして自由に変更可能</li>
-          <li>右下の <span class="modal-tag">✓</span> ボタン、またはサイドバーの○で設問を完了にできる</li>
-          <li>全設問が完了すると企業タブが緑色になる</li>
+          <li>上部の企業タブ右端 <span class="htag">＋</span> を押すとダイアログが開く</li>
+          <li>企業名（必須）・マイページURL・ログインID・提出期限を入力して追加</li>
+          <li>あとから変更したいときは、企業タブにカーソルを当てると出る <span class="htag">⚙</span> をクリック</li>
+          <li>期限が近づくと企業タブに <span class="htag" style="color:var(--warn)">残7日</span> のようなバッジが自動で表示される</li>
         </ul>
       </div>
-      <div class="modal-section">
-        <h3>⚙️ 企業情報パネル</h3>
-        <p>企業タブにカーソルを当てると歯車アイコンが表示されます。クリックするとマイページURL・ログインID・提出期限を管理できるパネルが開きます。期限が近づくと企業タブにバッジが表示されます。</p>
+
+      <div class="help-section">
+        <h3>📝 設問の管理</h3>
+        <ul>
+          <li>左サイドバーの <span class="htag">＋</span> で設問を追加</li>
+          <li>設問文・文字数制限を入力して本文を書く</li>
+          <li>サイドバーの各設問には現在の文字数と進捗ドットが表示される</li>
+          <li>書き終えたらサイドバーの ○ または右下の <span class="htag">✓</span> で完了マークをつける</li>
+          <li>企業の全設問が完了すると、企業タブが緑色になる</li>
+        </ul>
       </div>
+
+      <div class="help-section">
+        <h3>📄 草案の使い方</h3>
+        <ul>
+          <li>1つの設問に複数の草案を作って書き比べができる</li>
+          <li><span class="htag">＋ 追加</span> で新しい草案、<span class="htag">複製</span> で今の草案をコピー</li>
+          <li>草案名はアクティブな草案のタグをクリックして直接編集できる</li>
+          <li>草案の <span class="htag">×</span> で削除（最後の1つは削除不可）</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 </div>
@@ -424,7 +383,6 @@
   });
   const auth=firebase.auth(), db=firebase.firestore();
 
-  // State
   let companies=[], activeCompanyId=null, infoPanelOpenId=null;
   let theme='dark', currentUser=null, saveTimer=null;
 
@@ -437,28 +395,26 @@
     return 'none';
   }
   const activeCompany=()=>companies.find(c=>c.id===activeCompanyId);
-  const activeQuestion=()=>{ const c=activeCompany(); return c?(c.questions||[]).find(q=>q.id===c.activeQId):null; };
+  const activeQuestion=()=>{const c=activeCompany();return c?(c.questions||[]).find(q=>q.id===c.activeQId):null;};
   const activeDraftForQ=q=>(q.drafts||[]).find(d=>d.id===q.activeDraftId);
 
-  // Theme
+  // ── Theme ──
   function applyTheme(t){
     theme=t;
     document.documentElement.setAttribute('data-theme',t);
     document.getElementById('themeIcon').textContent=t==='dark'?'🌙':'☀️';
   }
-  document.getElementById('themeToggle').addEventListener('click',()=>{ applyTheme(theme==='dark'?'light':'dark'); scheduleSave(); });
+  document.getElementById('themeToggle').addEventListener('click',()=>{applyTheme(theme==='dark'?'light':'dark');scheduleSave();});
 
-  // Sync
+  // ── Sync ──
   function setSyncStatus(s){
     const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel');
-    const btn=document.getElementById('btnSave');
     dot.className='sync-dot';
-    if(s==='syncing'){dot.classList.add('syncing');lbl.textContent='保存中...';if(btn)btn.textContent='保存中...';}
-    else if(s==='synced'){dot.classList.add('synced');lbl.textContent='保存済み';if(btn)btn.textContent='✓ 保存済み';}
-    else{lbl.textContent='--';if(btn)btn.textContent='💾 保存';}
+    if(s==='syncing'){dot.classList.add('syncing');lbl.textContent='保存中...';}
+    else if(s==='synced'){dot.classList.add('synced');lbl.textContent='保存済み';}
+    else{lbl.textContent='--';}
   }
-  function scheduleSave(){ setSyncStatus('syncing'); clearTimeout(saveTimer); saveTimer=setTimeout(saveToCloud,10000); }
-  function saveNow(){ clearTimeout(saveTimer); saveToCloud(); }
+  function scheduleSave(){setSyncStatus('syncing');clearTimeout(saveTimer);saveTimer=setTimeout(saveToCloud,1500);}
   async function saveToCloud(){
     if(!currentUser) return;
     try{
@@ -473,21 +429,17 @@
       if(doc.exists){
         const d=doc.data();
         companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
-        // migrate
         companies.forEach(c=>(c.questions||[]).forEach(q=>{
-          if(!q.drafts){
-            q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];
-            q.activeDraftId=q.drafts[0].id; delete q.text;
-          }
+          if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
           if(q.done===undefined) q.done=false;
         }));
       }
     }catch(e){console.error(e);}
   }
 
-  // Auth
+  // ── Auth ──
   document.getElementById('btnLogin').addEventListener('click',()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()));
-  document.getElementById('btnLogout').addEventListener('click',()=>{ if(confirm('ログアウトしますか？')) auth.signOut(); });
+  document.getElementById('btnLogout').addEventListener('click',()=>{if(confirm('ログアウトしますか？')) auth.signOut();});
   auth.onAuthStateChanged(async user=>{
     if(user){
       currentUser=user;
@@ -508,20 +460,21 @@
     }
   });
 
+  window.addEventListener('beforeunload',()=>{clearTimeout(saveTimer);saveToCloud();});
+
   // ── Render ──
-  function render(){ renderCompanyTabs(); renderInfoPanel(); renderSidebar(); renderMain(); renderTitle(); updateTotalBadge(); }
+  function render(){renderCompanyTabs();renderInfoPanel();renderSidebar();renderMain();renderTitle();}
 
   function renderTitle(){
     const c=activeCompany();
     document.title=c?(c.name||'ES Manager'):'ES Manager';
   }
 
-  // Deadline
   function deadlineState(dl){
     if(!dl) return{cls:'',label:''};
-    const now=new Date(); now.setHours(0,0,0,0);
-    const d=new Date(dl); d.setHours(0,0,0,0);
-    const diff=Math.round((d-now)/(86400000));
+    const now=new Date();now.setHours(0,0,0,0);
+    const d=new Date(dl);d.setHours(0,0,0,0);
+    const diff=Math.round((d-now)/86400000);
     if(diff<0)  return{cls:'done',  label:'期限切'};
     if(diff===0) return{cls:'danger',label:'今日！'};
     if(diff<=3) return{cls:'danger',label:`残${diff}日`};
@@ -529,14 +482,17 @@
     return{cls:'',label:`残${diff}日`};
   }
 
-  // Company tabs
+  // ── Company tabs ──
   function renderCompanyTabs(){
     const bar=document.getElementById('companyTabs');
     bar.querySelectorAll('.ctab').forEach(t=>t.remove());
     const add=document.getElementById('companyAdd');
     companies.forEach(c=>{
       const tab=document.createElement('div');
-      tab.className='ctab'+(c.id===activeCompanyId?' active':'');
+      const qs=c.questions||[];
+      const allDone=qs.length>0&&qs.every(q=>q.done);
+      tab.className='ctab'+(c.id===activeCompanyId?' active':'')+(allDone?' all-done':'');
+
       const nameEl=document.createElement('span');
       nameEl.className='ctab-name';
       nameEl.contentEditable=c.id===activeCompanyId?'true':'false';
@@ -544,21 +500,13 @@
       nameEl.addEventListener('input',()=>{c.name=nameEl.textContent.trim();renderTitle();scheduleSave();});
       nameEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();nameEl.blur();}});
       nameEl.addEventListener('click',e=>{if(c.id===activeCompanyId) e.stopPropagation();});
-      // Check if all questions done
-      const qs=c.questions||[];
-      const allDone=qs.length>0&&qs.every(q=>q.done);
-      if(allDone) tab.classList.add('all-done');
-
       tab.appendChild(nameEl);
 
-      // done badge
       if(allDone){
-        const doneBadge=document.createElement('span');
-        doneBadge.className='ctab-done-badge'; doneBadge.textContent='✓';
-        tab.appendChild(doneBadge);
+        const db=document.createElement('span');
+        db.className='ctab-done-badge';db.textContent='✓';
+        tab.appendChild(db);
       }
-
-      // deadline badge (separate element, no overlap)
       if(c.deadline){
         const dl=deadlineState(c.deadline);
         if(dl.label){
@@ -568,41 +516,37 @@
           tab.appendChild(badge);
         }
       }
-
       const gear=document.createElement('span');
-      gear.className='ctab-settings'; gear.textContent='⚙'; gear.title='企業情報';
+      gear.className='ctab-settings';gear.textContent='⚙';gear.title='企業情報';
       gear.addEventListener('click',e=>{e.stopPropagation();infoPanelOpenId=infoPanelOpenId===c.id?null:c.id;renderInfoPanel();});
       const cls=document.createElement('span');
-      cls.className='ctab-close'; cls.textContent='×';
+      cls.className='ctab-close';cls.textContent='×';
       cls.addEventListener('click',e=>{e.stopPropagation();removeCompany(c.id);});
-      tab.appendChild(gear); tab.appendChild(cls);
+      tab.appendChild(gear);tab.appendChild(cls);
       tab.addEventListener('click',()=>{if(activeCompanyId!==c.id){activeCompanyId=c.id;infoPanelOpenId=null;render();scheduleSave();}});
       bar.insertBefore(tab,add);
     });
   }
 
-  // Info panel
+  // ── Info panel ──
   function renderInfoPanel(){
     const panel=document.getElementById('infoPanel');
     const c=companies.find(x=>x.id===infoPanelOpenId);
     if(!c){panel.classList.remove('open');return;}
     panel.classList.add('open');
-    const urlEl=document.getElementById('infoUrl');
-    const idEl=document.getElementById('infoId');
-    const dlEl=document.getElementById('infoDeadline');
-    const openBtn=document.getElementById('btnOpenUrl');
-    [urlEl,idEl,dlEl].forEach(el=>{const n=el.cloneNode(true);el.parentNode.replaceChild(n,el);});
+    ['infoUrl','infoId','infoDeadline'].forEach(id=>{const el=document.getElementById(id);const n=el.cloneNode(true);el.parentNode.replaceChild(n,el);});
     const nUrl=document.getElementById('infoUrl');
     const nId=document.getElementById('infoId');
     const nDl=document.getElementById('infoDeadline');
-    nUrl.value=c.url||''; nId.value=c.loginId||''; nDl.value=c.deadline||'';
+    const openBtn=document.getElementById('btnOpenUrl');
+    nUrl.value=c.url||'';nId.value=c.loginId||'';nDl.value=c.deadline||'';
     openBtn.href=c.url||'#';
     nUrl.addEventListener('input',()=>{c.url=nUrl.value.trim();openBtn.href=c.url||'#';scheduleSave();});
     nId.addEventListener('input',()=>{c.loginId=nId.value;scheduleSave();});
     nDl.addEventListener('change',()=>{c.deadline=nDl.value;renderCompanyTabs();scheduleSave();});
   }
 
-  // ── Sidebar (question list) ──
+  // ── Sidebar ──
   function renderSidebar(){
     const list=document.getElementById('sidebarList');
     list.innerHTML='';
@@ -615,43 +559,35 @@
       const item=document.createElement('div');
       item.className='qitem'+(q.id===c.activeQId?' active':'');
 
-      // completion toggle
       const chk=document.createElement('div');
       chk.className='qitem-check'+(q.done?' done':'');
       chk.textContent=q.done?'✓':'';
       chk.title=q.done?'完了解除':'完了にする';
       chk.addEventListener('click',e=>{
-        e.stopPropagation();
-        q.done=!q.done;
-        scheduleSave(); renderSidebar(); renderCompanyTabs();
-        // also update done btn if this is active
+        e.stopPropagation();q.done=!q.done;
         const btn=document.getElementById('btnDone');
         if(btn) btn.className='btn-done'+(q.done?' done':'');
+        scheduleSave();renderSidebar();renderCompanyTabs();
       });
 
-      const body=document.createElement('div');
-      body.className='qitem-body';
-      const lbl=document.createElement('div');
-      lbl.className='qitem-label';
+      const body=document.createElement('div');body.className='qitem-body';
+      const lbl=document.createElement('div');lbl.className='qitem-label';
       lbl.textContent=q.label?q.label:`設問 ${i+1}`;
-      const meta=document.createElement('div');
-      meta.className='qitem-meta';
+      const meta=document.createElement('div');meta.className='qitem-meta';
       if(q.limit>0){
         const rem=q.limit-count;
         meta.textContent=rem>=0?`${count}/${q.limit} (残${rem}字)`:`${count}/${q.limit} (+${-rem})`;
-      } else {
-        meta.textContent=count>0?`${count}字`:'未入力';
-      }
-      body.appendChild(lbl); body.appendChild(meta);
+      } else {meta.textContent=count>0?`${count}字`:'未入力';}
+      body.appendChild(lbl);body.appendChild(meta);
 
       const dot=document.createElement('div');
       dot.className='qitem-dot'+(state!=='none'?' '+state:'');
 
       const del=document.createElement('span');
-      del.className='qitem-del'; del.textContent='×';
+      del.className='qitem-del';del.textContent='×';
       del.addEventListener('click',e=>{e.stopPropagation();if(confirm('この設問を削除しますか？')) removeQuestion(c.id,q.id);});
 
-      item.appendChild(chk); item.appendChild(body); item.appendChild(dot); item.appendChild(del);
+      item.appendChild(chk);item.appendChild(body);item.appendChild(dot);item.appendChild(del);
       item.addEventListener('click',()=>{c.activeQId=q.id;renderSidebar();renderMain();scheduleSave();});
       list.appendChild(item);
     });
@@ -665,21 +601,17 @@
     if(!c){
       empty.style.display='block';
       document.getElementById('emptyMsg').innerHTML='上の <strong>＋</strong> で企業を追加してください';
-      const old=area.querySelector('.question-card'); if(old) old.remove();
-      return;
+      const old=area.querySelector('.question-card');if(old) old.remove();return;
     }
     const q=activeQuestion();
     if(!q){
       empty.style.display='block';
       document.getElementById('emptyMsg').innerHTML='左の <strong>＋</strong> で設問を追加してください';
-      const old=area.querySelector('.question-card'); if(old) old.remove();
-      return;
+      const old=area.querySelector('.question-card');if(old) old.remove();return;
     }
     empty.style.display='none';
-    const old=area.querySelector('.question-card'); if(old) old.remove();
-    const card=buildCard();
-    area.appendChild(card);
-    fillCard(card,q);
+    const old=area.querySelector('.question-card');if(old) old.remove();
+    const card=buildCard();area.appendChild(card);fillCard(card,q);
   }
 
   function buildCard(){
@@ -722,28 +654,28 @@
       </div>`;
 
     card.querySelector('#cardLabel').addEventListener('input',e=>{
-      const q=activeQuestion(); if(!q) return;
-      q.label=e.target.value; renderSidebar(); scheduleSave();
+      const q=activeQuestion();if(!q) return;
+      q.label=e.target.value;renderSidebar();scheduleSave();
     });
     card.querySelector('#cardLimit').addEventListener('input',e=>{
-      const q=activeQuestion(); if(!q) return;
-      q.limit=parseInt(e.target.value)||0; updateCounter(card,q); renderSidebar(); scheduleSave();
+      const q=activeQuestion();if(!q) return;
+      q.limit=parseInt(e.target.value)||0;updateCounter(card,q);renderSidebar();scheduleSave();
     });
     card.querySelector('#cardText').addEventListener('input',e=>{
-      const q=activeQuestion(); if(!q) return;
-      const d=activeDraftForQ(q); if(!d) return;
-      d.text=e.target.value; updateCounter(card,q); renderSidebar(); scheduleSave();
+      const q=activeQuestion();if(!q) return;
+      const d=activeDraftForQ(q);if(!d) return;
+      d.text=e.target.value;updateCounter(card,q);renderSidebar();scheduleSave();
     });
     card.querySelector('#cardText').addEventListener('input',function(){
-      this.style.height='auto'; this.style.height=Math.max(220,this.scrollHeight)+'px';
+      this.style.height='auto';this.style.height=Math.max(220,this.scrollHeight)+'px';
     });
     card.querySelector('#btnDraftAdd').addEventListener('click',addDraft);
     card.querySelector('#btnDraftDupe').addEventListener('click',dupeDraft);
     card.querySelector('#btnDone').addEventListener('click',()=>{
-      const q=activeQuestion(); if(!q) return;
+      const q=activeQuestion();if(!q) return;
       q.done=!q.done;
       card.querySelector('#btnDone').className='btn-done'+(q.done?' done':'');
-      renderSidebar(); renderCompanyTabs(); scheduleSave();
+      renderSidebar();renderCompanyTabs();scheduleSave();
     });
     return card;
   }
@@ -752,14 +684,11 @@
     card.querySelector('#cardLabel').value=q.label||'';
     card.querySelector('#cardLimit').value=q.limit||'';
     card.querySelector('#btnDone').className='btn-done'+(q.done?' done':'');
-
-    // Draft pills
     const pillsEl=card.querySelector('#draftPills');
     pillsEl.innerHTML='';
     (q.drafts||[]).forEach(d=>{
       const pill=document.createElement('button');
       pill.className='draft-pill'+(d.id===q.activeDraftId?' active':'');
-
       const nameEl=document.createElement('span');
       nameEl.className='draft-name';
       nameEl.contentEditable=d.id===q.activeDraftId?'true':'false';
@@ -768,9 +697,8 @@
       nameEl.addEventListener('input',()=>{d.name=nameEl.textContent.trim();scheduleSave();});
       nameEl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();nameEl.blur();}});
       nameEl.addEventListener('click',e=>{if(d.id===q.activeDraftId) e.stopPropagation();});
-
       const cls=document.createElement('span');
-      cls.className='draft-pill-close'; cls.textContent='×';
+      cls.className='draft-pill-close';cls.textContent='×';
       cls.addEventListener('click',e=>{
         e.stopPropagation();
         if((q.drafts||[]).length<=1){alert('最後の草案は削除できません');return;}
@@ -778,26 +706,22 @@
         const idx=q.drafts.findIndex(x=>x.id===d.id);
         q.drafts.splice(idx,1);
         if(q.activeDraftId===d.id) q.activeDraftId=q.drafts[Math.max(0,idx-1)].id;
-        render(); scheduleSave();
+        render();scheduleSave();
       });
-
-      pill.appendChild(nameEl); pill.appendChild(cls);
-      pill.addEventListener('click',()=>{
-        if(q.activeDraftId!==d.id){q.activeDraftId=d.id;render();scheduleSave();}
-      });
+      pill.appendChild(nameEl);pill.appendChild(cls);
+      pill.addEventListener('click',()=>{if(q.activeDraftId!==d.id){q.activeDraftId=d.id;render();scheduleSave();}});
       pillsEl.appendChild(pill);
     });
-
     const d=activeDraftForQ(q);
     const ta=card.querySelector('#cardText');
     ta.value=d?d.text||'':'';
-    ta.style.height='auto'; ta.style.height=Math.max(220,ta.scrollHeight)+'px';
+    ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight)+'px';
     updateCounter(card,q);
   }
 
   function updateCounter(card,q){
     const d=activeDraftForQ(q);
-    const count=countChars(d?d.text:''), limit=q.limit||0, state=getState(count,limit);
+    const count=countChars(d?d.text:''),limit=q.limit||0,state=getState(count,limit);
     const cm={none:'var(--text)',ok:'var(--ok)',warn:'var(--warn)',danger:'var(--danger)'};
     card.querySelector('#cardCurrent').textContent=count;
     card.querySelector('#cardCurrent').style.color=cm[state];
@@ -815,105 +739,94 @@
       card.querySelector('#progressFill').style.width='0%';
       card.querySelector('#progressLabel').textContent='';
     }
-    updateTotalBadge();
   }
 
-  function updateTotalBadge(){
-    const total=companies.reduce((s,c)=>(c.questions||[]).reduce((s2,q)=>{
-      const d=activeDraftForQ(q); return s2+countChars(d?d.text:'');
-    },s),0);
-    document.getElementById('totalBadge').textContent=`合計 ${total} 字`;
-  }
-
-  // Draft actions
+  // ── Draft ──
   function addDraft(){
-    const q=activeQuestion(); if(!q) return;
+    const q=activeQuestion();if(!q) return;
     if(!q.drafts) q.drafts=[];
     const id=genId();
     q.drafts.push({id,name:`草案${q.drafts.length+1}`,text:''});
-    q.activeDraftId=id;
-    render(); scheduleSave();
+    q.activeDraftId=id;render();scheduleSave();
     setTimeout(()=>{const el=document.getElementById('cardText');if(el) el.focus();},50);
   }
   function dupeDraft(){
-    const q=activeQuestion(); if(!q) return;
-    const d=activeDraftForQ(q); if(!d) return;
+    const q=activeQuestion();if(!q) return;
+    const d=activeDraftForQ(q);if(!d) return;
     const id=genId();
     q.drafts.push({id,name:d.name+'（複製）',text:d.text});
-    q.activeDraftId=id;
-    render(); scheduleSave();
+    q.activeDraftId=id;render();scheduleSave();
   }
 
-  // Company / Question actions
-  function addCompany(){
-    // Reset fields
-    document.getElementById('newCompanyName').value='';
-    document.getElementById('newCompanyUrl').value='';
-    document.getElementById('newCompanyId').value='';
-    document.getElementById('newCompanyDeadline').value='';
-    document.getElementById('addCompanyModalBg').classList.add('open');
-    setTimeout(()=>document.getElementById('newCompanyName').focus(),50);
+  // ── Company / Question actions ──
+  function openAddCompanyModal(){
+    document.getElementById('newName').value='';
+    document.getElementById('newUrl').value='';
+    document.getElementById('newLoginId').value='';
+    document.getElementById('newDeadline').value='';
+    document.getElementById('addCompanyBg').classList.add('open');
+    setTimeout(()=>document.getElementById('newName').focus(),50);
   }
   function confirmAddCompany(){
-    const name=document.getElementById('newCompanyName').value.trim();
-    if(!name){ document.getElementById('newCompanyName').focus(); return; }
-    const url=document.getElementById('newCompanyUrl').value.trim();
-    const loginId=document.getElementById('newCompanyId').value.trim();
-    const deadline=document.getElementById('newCompanyDeadline').value;
+    const name=document.getElementById('newName').value.trim();
+    if(!name){document.getElementById('newName').focus();return;}
+    const url=document.getElementById('newUrl').value.trim();
+    const loginId=document.getElementById('newLoginId').value.trim();
+    const deadline=document.getElementById('newDeadline').value;
     const id=genId();
     companies.push({id,name,url,loginId,deadline,questions:[],activeQId:null});
     activeCompanyId=id;
-    document.getElementById('addCompanyModalBg').classList.remove('open');
-    render(); scheduleSave();
+    document.getElementById('addCompanyBg').classList.remove('open');
+    render();scheduleSave();
   }
+  function closeAddCompanyModal(){document.getElementById('addCompanyBg').classList.remove('open');}
+
   function removeCompany(id){
     if(!confirm('この企業と設問をすべて削除しますか？')) return;
     const idx=companies.findIndex(c=>c.id===id);
     companies.splice(idx,1);
     if(activeCompanyId===id) activeCompanyId=companies.length>0?companies[Math.max(0,idx-1)].id:null;
-    render(); scheduleSave();
+    render();scheduleSave();
   }
   function addQuestion(){
-    const c=activeCompany(); if(!c) return;
-    const id=genId(), did=genId();
+    const c=activeCompany();if(!c) return;
+    const id=genId(),did=genId();
     if(!c.questions) c.questions=[];
     c.questions.push({id,label:'',limit:0,done:false,activeDraftId:did,drafts:[{id:did,name:'草案1',text:''}]});
-    c.activeQId=id;
-    render(); scheduleSave();
+    c.activeQId=id;render();scheduleSave();
     setTimeout(()=>{const el=document.getElementById('cardLabel');if(el) el.focus();},50);
   }
   function removeQuestion(companyId,qId){
-    const c=companies.find(c=>c.id===companyId); if(!c) return;
+    const c=companies.find(c=>c.id===companyId);if(!c) return;
     const idx=c.questions.findIndex(q=>q.id===qId);
     c.questions.splice(idx,1);
     if(c.activeQId===qId) c.activeQId=c.questions.length>0?c.questions[Math.max(0,idx-1)].id:null;
-    render(); scheduleSave();
+    render();scheduleSave();
   }
 
-  // Save button
-  document.getElementById('btnSave').addEventListener('click',()=>{ saveNow(); });
-
-  // Help modal
-  document.getElementById('btnHelp').addEventListener('click',()=>{ document.getElementById('modalBg').classList.add('open'); });
-  document.getElementById('modalClose').addEventListener('click',()=>{ document.getElementById('modalBg').classList.remove('open'); });
-  document.getElementById('modalBg').addEventListener('click',e=>{ if(e.target===document.getElementById('modalBg')) document.getElementById('modalBg').classList.remove('open'); });
-
-  // Save on page close
-  window.addEventListener('beforeunload',()=>{ clearTimeout(saveTimer); saveToCloud(); });
-
-  document.getElementById('companyAdd').addEventListener('click',addCompany);
+  // ── Event listeners ──
+  document.getElementById('companyAdd').addEventListener('click',openAddCompanyModal);
   document.getElementById('addCompanyConfirm').addEventListener('click',confirmAddCompany);
-  document.getElementById('addCompanyCancel').addEventListener('click',()=>document.getElementById('addCompanyModalBg').classList.remove('open'));
-  document.getElementById('addCompanyModalClose').addEventListener('click',()=>document.getElementById('addCompanyModalBg').classList.remove('open'));
-  document.getElementById('addCompanyModalBg').addEventListener('click',e=>{if(e.target===document.getElementById('addCompanyModalBg')) document.getElementById('addCompanyModalBg').classList.remove('open');});
-  document.getElementById('newCompanyName').addEventListener('keydown',e=>{if(e.key==='Enter') confirmAddCompany();});
+  document.getElementById('addCompanyCancel').addEventListener('click',closeAddCompanyModal);
+  document.getElementById('addCompanyClose').addEventListener('click',closeAddCompanyModal);
+  document.getElementById('addCompanyBg').addEventListener('click',e=>{if(e.target===document.getElementById('addCompanyBg')) closeAddCompanyModal();});
+  document.getElementById('newName').addEventListener('keydown',e=>{if(e.key==='Enter') confirmAddCompany();});
+
   document.getElementById('questionAdd').addEventListener('click',addQuestion);
+
+  document.getElementById('btnHelp').addEventListener('click',()=>document.getElementById('helpBg').classList.add('open'));
+  document.getElementById('helpClose').addEventListener('click',()=>document.getElementById('helpBg').classList.remove('open'));
+  document.getElementById('helpBg').addEventListener('click',e=>{if(e.target===document.getElementById('helpBg')) document.getElementById('helpBg').classList.remove('open');});
 
   document.addEventListener('keydown',e=>{
     const tag=document.activeElement.tagName;
     const ce=document.activeElement.contentEditable;
     if(tag==='INPUT'||tag==='TEXTAREA'||ce==='true') return;
     if(e.key==='n'||e.key==='N') addQuestion();
+    if(e.key==='Escape'){
+      document.getElementById('addCompanyBg').classList.remove('open');
+      document.getElementById('helpBg').classList.remove('open');
+    }
   });
 </script>
 </body>
