@@ -71,7 +71,7 @@
     .ctab:hover{color:var(--text2);background:rgba(108,143,255,.04);}
     .ctab.active{color:var(--text);border-bottom-color:var(--accent);}
     .ctab-name{outline:none;background:transparent;border:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;cursor:pointer;min-width:30px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;}
-    .ctab.active .ctab-name{cursor:text;}
+    .ctab.active .ctab-name{cursor:text;max-width:none;overflow:visible;text-overflow:clip;}
     .ctab-deadline{font-size:10px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;border:1px solid var(--border);color:var(--text3);flex-shrink:0;white-space:nowrap;}
     .ctab-deadline.warn{color:var(--warn);border-color:var(--warn);background:rgba(251,191,36,.08);}
     .ctab-deadline.danger{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.08);}
