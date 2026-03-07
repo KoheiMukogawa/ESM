@@ -63,6 +63,44 @@
     .user-avatar{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);object-fit:cover;}
     .btn-logout{font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;transition:all .15s;}
     .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+    .btn-save{font-size:11px;padding:4px 12px;background:var(--accent);border:1px solid transparent;border-radius:6px;color:#fff;cursor:pointer;transition:all .15s;font-weight:600;}
+    .btn-save:hover{opacity:.85;}
+    .btn-save:disabled{background:var(--ok);cursor:default;opacity:.7;}
+    .btn-help{font-size:13px;width:26px;height:26px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+    .btn-help:hover{border-color:var(--accent);color:var(--accent);}
+    /* Modal */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:20px;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow);}
+    .modal-head{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-head h2{font-size:16px;font-weight:700;}
+    .modal-close{font-size:18px;cursor:pointer;color:var(--text3);background:none;border:none;line-height:1;}
+    .modal-close:hover{color:var(--text);}
+    .modal-body{padding:20px 24px;}
+    .modal-section{margin-bottom:22px;}
+    .modal-section:last-child{margin-bottom:0;}
+    .modal-section h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px;}
+    .modal-section p,.modal-section li{font-size:13px;color:var(--text2);line-height:1.8;}
+    .modal-section ul{padding-left:16px;}
+    .modal-section li{margin-bottom:4px;}
+    .modal-tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);margin:0 2px;}
+    /* Add company modal */
+    .add-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:20px;}
+    .add-modal-bg.open{display:flex;}
+    .add-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:460px;width:100%;box-shadow:var(--shadow);}
+    .add-modal-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .add-modal-head h2{font-size:15px;font-weight:700;}
+    .add-modal-body{padding:18px 22px;display:flex;flex-direction:column;gap:14px;}
+    .add-modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+    .add-modal-field{display:flex;flex-direction:column;gap:5px;}
+    .add-modal-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
+    .add-modal-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;transition:border-color .15s;width:100%;}
+    .add-modal-input:focus{border-color:var(--accent);}
+    .add-modal-input::placeholder{color:var(--text3);}
+    .btn-primary{padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+    .btn-primary:hover{opacity:.85;}
+    .btn-cancel{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:13px;cursor:pointer;transition:all .15s;}
+    .btn-cancel:hover{border-color:var(--text2);color:var(--text2);}
 
     /* ── Company tabs ── */
     .company-tabs{display:flex;align-items:center;gap:2px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
@@ -239,7 +277,7 @@
   <div class="login-box">
     <div class="logo">✏️</div>
     <h2>ES Manager</h2>
-    <p>Googleアカウントでログインすると、<br>どのデバイスからでも作業を続けられます。</p>
+    <p>天才向川君が作成したES一元管理システム！<br>Googleアカウントでログインすると、<br>どのデバイスからでも作業を続けられます。</p>
     <button class="btn-google" id="btnLogin">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
       Googleでログイン
@@ -259,6 +297,8 @@
           <span id="syncLabel">--</span>
         </div>
         <img class="user-avatar" id="userAvatar" src="" alt="" style="display:none">
+        <button class="btn-save" id="btnSave">💾 保存</button>
+        <button class="btn-help" id="btnHelp" title="使い方">?</button>
         <button class="btn-logout" id="btnLogout">ログアウト</button>
       </div>
     </div>
@@ -303,6 +343,76 @@
   </div>
 </div>
 
+<!-- Add Company Modal -->
+<div class="add-modal-bg" id="addCompanyModalBg">
+  <div class="add-modal">
+    <div class="add-modal-head">
+      <h2>🏢 企業を追加</h2>
+      <button class="modal-close" id="addCompanyModalClose">×</button>
+    </div>
+    <div class="add-modal-body">
+      <div class="add-modal-field">
+        <label class="add-modal-label">企業名 <span style="color:var(--danger)">*</span></label>
+        <input class="add-modal-input" id="newCompanyName" type="text" placeholder="例：JAL自社養成">
+      </div>
+      <div class="add-modal-field">
+        <label class="add-modal-label">マイページ URL</label>
+        <input class="add-modal-input" id="newCompanyUrl" type="url" placeholder="https://...">
+      </div>
+      <div class="add-modal-field">
+        <label class="add-modal-label">ログイン ID</label>
+        <input class="add-modal-input" id="newCompanyId" type="text" placeholder="メールアドレス等">
+      </div>
+      <div class="add-modal-field">
+        <label class="add-modal-label">提出期限</label>
+        <input class="add-modal-input" id="newCompanyDeadline" type="date">
+      </div>
+    </div>
+    <div class="add-modal-foot">
+      <button class="btn-cancel" id="addCompanyCancel">キャンセル</button>
+      <button class="btn-primary" id="addCompanyConfirm">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>✏️ ES Manager 使い方ガイド</h2>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3>💾 保存の仕組み</h3>
+        <p>入力が止まってから<strong>10秒後</strong>に自動でクラウドに保存されます。すぐ保存したいときはヘッダーの <span class="modal-tag">💾 保存</span> ボタン、またはブラウザを閉じる際にも自動で保存が走ります。</p>
+        <p style="margin-top:8px;">右上の●インジケーターで状態が確認できます。<br>
+        <span style="color:var(--warn)">●</span> 保存中　<span style="color:var(--ok)">●</span> 保存済み</p>
+      </div>
+      <div class="modal-section">
+        <h3>☁️ データの保存先</h3>
+        <p>データはGoogleアカウントに紐づいてクラウド（Firebase）に保存されます。同じGoogleアカウントでログインすれば、スマホ・PCどのデバイスからでも同じデータにアクセスできます。他の人のデータは見えません。</p>
+      </div>
+      <div class="modal-section">
+        <h3>🏢 基本操作</h3>
+        <ul>
+          <li>上部の企業タブ右端 <span class="modal-tag">＋</span> で企業を追加</li>
+          <li>左サイドバーの <span class="modal-tag">＋</span> で設問を追加</li>
+          <li>設問文と文字数制限を入力して本文を書く</li>
+          <li>草案バーで <span class="modal-tag">＋ 追加</span> や <span class="modal-tag">複製</span> をして書き比べができる</li>
+          <li>草案名はクリックして自由に変更可能</li>
+          <li>右下の <span class="modal-tag">✓</span> ボタン、またはサイドバーの○で設問を完了にできる</li>
+          <li>全設問が完了すると企業タブが緑色になる</li>
+        </ul>
+      </div>
+      <div class="modal-section">
+        <h3>⚙️ 企業情報パネル</h3>
+        <p>企業タブにカーソルを当てると歯車アイコンが表示されます。クリックするとマイページURL・ログインID・提出期限を管理できるパネルが開きます。期限が近づくと企業タブにバッジが表示されます。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   firebase.initializeApp({
     apiKey:"AIzaSyAQTCLPNVZiNe0qpBqHEhLu8vEMIWBE4pw",
@@ -341,12 +451,14 @@
   // Sync
   function setSyncStatus(s){
     const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel');
+    const btn=document.getElementById('btnSave');
     dot.className='sync-dot';
-    if(s==='syncing'){dot.classList.add('syncing');lbl.textContent='保存中...';}
-    else if(s==='synced'){dot.classList.add('synced');lbl.textContent='保存済み';}
-    else{lbl.textContent='--';}
+    if(s==='syncing'){dot.classList.add('syncing');lbl.textContent='保存中...';if(btn)btn.textContent='保存中...';}
+    else if(s==='synced'){dot.classList.add('synced');lbl.textContent='保存済み';if(btn)btn.textContent='✓ 保存済み';}
+    else{lbl.textContent='--';if(btn)btn.textContent='💾 保存';}
   }
-  function scheduleSave(){ setSyncStatus('syncing'); clearTimeout(saveTimer); saveTimer=setTimeout(saveToCloud,1500); }
+  function scheduleSave(){ setSyncStatus('syncing'); clearTimeout(saveTimer); saveTimer=setTimeout(saveToCloud,10000); }
+  function saveNow(){ clearTimeout(saveTimer); saveToCloud(); }
   async function saveToCloud(){
     if(!currentUser) return;
     try{
@@ -734,15 +846,25 @@
 
   // Company / Question actions
   function addCompany(){
+    // Reset fields
+    document.getElementById('newCompanyName').value='';
+    document.getElementById('newCompanyUrl').value='';
+    document.getElementById('newCompanyId').value='';
+    document.getElementById('newCompanyDeadline').value='';
+    document.getElementById('addCompanyModalBg').classList.add('open');
+    setTimeout(()=>document.getElementById('newCompanyName').focus(),50);
+  }
+  function confirmAddCompany(){
+    const name=document.getElementById('newCompanyName').value.trim();
+    if(!name){ document.getElementById('newCompanyName').focus(); return; }
+    const url=document.getElementById('newCompanyUrl').value.trim();
+    const loginId=document.getElementById('newCompanyId').value.trim();
+    const deadline=document.getElementById('newCompanyDeadline').value;
     const id=genId();
-    companies.push({id,name:'企業名',questions:[],activeQId:null});
+    companies.push({id,name,url,loginId,deadline,questions:[],activeQId:null});
     activeCompanyId=id;
+    document.getElementById('addCompanyModalBg').classList.remove('open');
     render(); scheduleSave();
-    setTimeout(()=>{
-      const tabs=document.querySelectorAll('.ctab');
-      const last=tabs[tabs.length-1];
-      if(last){const n=last.querySelector('.ctab-name');if(n){n.focus();document.execCommand('selectAll');}}
-    },50);
   }
   function removeCompany(id){
     if(!confirm('この企業と設問をすべて削除しますか？')) return;
@@ -768,7 +890,23 @@
     render(); scheduleSave();
   }
 
+  // Save button
+  document.getElementById('btnSave').addEventListener('click',()=>{ saveNow(); });
+
+  // Help modal
+  document.getElementById('btnHelp').addEventListener('click',()=>{ document.getElementById('modalBg').classList.add('open'); });
+  document.getElementById('modalClose').addEventListener('click',()=>{ document.getElementById('modalBg').classList.remove('open'); });
+  document.getElementById('modalBg').addEventListener('click',e=>{ if(e.target===document.getElementById('modalBg')) document.getElementById('modalBg').classList.remove('open'); });
+
+  // Save on page close
+  window.addEventListener('beforeunload',()=>{ clearTimeout(saveTimer); saveToCloud(); });
+
   document.getElementById('companyAdd').addEventListener('click',addCompany);
+  document.getElementById('addCompanyConfirm').addEventListener('click',confirmAddCompany);
+  document.getElementById('addCompanyCancel').addEventListener('click',()=>document.getElementById('addCompanyModalBg').classList.remove('open'));
+  document.getElementById('addCompanyModalClose').addEventListener('click',()=>document.getElementById('addCompanyModalBg').classList.remove('open'));
+  document.getElementById('addCompanyModalBg').addEventListener('click',e=>{if(e.target===document.getElementById('addCompanyModalBg')) document.getElementById('addCompanyModalBg').classList.remove('open');});
+  document.getElementById('newCompanyName').addEventListener('keydown',e=>{if(e.key==='Enter') confirmAddCompany();});
   document.getElementById('questionAdd').addEventListener('click',addQuestion);
 
   document.addEventListener('keydown',e=>{
