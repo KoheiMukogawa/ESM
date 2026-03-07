@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
-    :root {
+    /* ── Themes ── */
+    :root, [data-theme="dark"] {
       --bg: #0f0f11;
       --surface: #18181c;
       --surface2: #202026;
@@ -21,18 +22,36 @@
       --text: #e8e8f0;
       --text2: #8888a0;
       --text3: #55556a;
+      --header-bg: rgba(15,15,17,0.95);
+      --shadow: 0 2px 12px rgba(0,0,0,0.4);
     }
+    [data-theme="light"] {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --surface2: #f0f0f3;
+      --border: #dcdce4;
+      --accent: #3b5bdb;
+      --ok: #099268;
+      --warn: #e67700;
+      --danger: #c92a2a;
+      --text: #1a1a2e;
+      --text2: #5c5c7a;
+      --text3: #9999b0;
+      --header-bg: rgba(245,245,247,0.95);
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; transition: background 0.2s, color 0.2s; }
 
     /* ── Login ── */
     #loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; text-align: center; max-width: 360px; width: 90%; }
+    .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; text-align: center; max-width: 360px; width: 90%; box-shadow: var(--shadow); }
     .login-box .logo { font-size: 36px; margin-bottom: 16px; }
     .login-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
     .login-box p { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 28px; }
     .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px 20px; background: #fff; color: #333; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
-    .btn-google:hover { opacity: 0.9; }
+    .btn-google:hover { opacity: 0.88; }
     .btn-google img { width: 18px; height: 18px; }
 
     /* ── App ── */
@@ -41,16 +60,38 @@
     /* ── Header ── */
     header {
       position: sticky; top: 0; z-index: 100;
-      background: rgba(15,15,17,0.95);
+      background: var(--header-bg);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
     }
-    .header-top {
-      padding: 10px 24px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .header-top { padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; }
     .header-title { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); font-weight: 500; }
-    .header-right { display: flex; align-items: center; gap: 12px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    /* Theme toggle */
+    .theme-toggle {
+      width: 36px; height: 20px;
+      background: var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      border: none;
+    }
+    .theme-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--text2);
+      transition: transform 0.2s, background 0.2s;
+    }
+    [data-theme="light"] .theme-toggle::after { transform: translateX(16px); background: var(--accent); }
+    .theme-icon { font-size: 12px; }
+
     .sync-status { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; display: flex; align-items: center; gap: 5px; }
     .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); transition: background 0.3s; }
     .sync-dot.syncing { background: var(--warn); animation: pulse 1s infinite; }
@@ -61,25 +102,11 @@
     .btn-logout { font-size: 11px; padding: 4px 10px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text3); cursor: pointer; transition: all 0.15s; }
     .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
 
-    /* ── Company tabs (row 1) ── */
-    .company-tabs {
-      display: flex; align-items: center; gap: 2px;
-      padding: 0 24px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto; scrollbar-width: none;
-    }
+    /* ── Company tabs ── */
+    .company-tabs { display: flex; align-items: center; gap: 2px; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
     .company-tabs::-webkit-scrollbar { display: none; }
-
-    .ctab {
-      display: flex; align-items: center; gap: 6px;
-      padding: 10px 16px;
-      font-size: 13px; font-weight: 600;
-      color: var(--text3); cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap; transition: all 0.15s; user-select: none;
-    }
-    .ctab:hover { color: var(--text2); background: rgba(255,255,255,0.02); }
+    .ctab { display: flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.15s; user-select: none; }
+    .ctab:hover { color: var(--text2); background: rgba(108,143,255,0.04); }
     .ctab.active { color: var(--text); border-bottom-color: var(--accent); }
     .ctab-name { outline: none; background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; font-weight: inherit; cursor: pointer; min-width: 40px; max-width: 140px; }
     .ctab.active .ctab-name { cursor: text; }
@@ -89,30 +116,16 @@
     .ctab-add { padding: 8px 14px; font-size: 18px; color: var(--text3); cursor: pointer; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
     .ctab-add:hover { color: var(--accent); }
 
-    /* ── Question tabs (row 2) ── */
-    .question-tabs {
-      display: flex; align-items: center; gap: 2px;
-      padding: 0 24px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto; scrollbar-width: none;
-    }
+    /* ── Question tabs ── */
+    .question-tabs { display: flex; align-items: center; gap: 2px; padding: 0 24px; background: var(--bg); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
     .question-tabs::-webkit-scrollbar { display: none; }
-
-    .qtab {
-      display: flex; align-items: center; gap: 6px;
-      padding: 8px 14px;
-      font-size: 12px; font-weight: 500;
-      color: var(--text3); cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap; transition: all 0.15s; user-select: none;
-    }
+    .qtab { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 12px; font-weight: 500; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.15s; user-select: none; }
     .qtab:hover { color: var(--text2); }
     .qtab.active { color: var(--text); border-bottom-color: var(--accent); }
     .qtab-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
     .qtab.active .qtab-dot { background: var(--accent); }
-    .qtab-dot.ok     { background: var(--ok); }
-    .qtab-dot.warn   { background: var(--warn); }
+    .qtab-dot.ok { background: var(--ok); }
+    .qtab-dot.warn { background: var(--warn); }
     .qtab-dot.danger { background: var(--danger); }
     .qtab-close { opacity: 0; color: var(--text3); font-size: 12px; transition: opacity 0.15s; margin-left: 2px; }
     .qtab:hover .qtab-close { opacity: 1; }
@@ -122,7 +135,9 @@
 
     /* ── Main ── */
     .main { max-width: 860px; margin: 0 auto; padding: 28px 24px 0; }
-    .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+    /* ── Question card ── */
+    .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
     .q-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
     .q-sublabel { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); font-weight: 500; }
     .q-title-input { background: transparent; border: none; outline: none; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 15px; font-weight: 500; width: 100%; line-height: 1.5; resize: none; }
@@ -131,6 +146,34 @@
     .q-limit-wrap { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
     .q-limit-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; width: 72px; outline: none; text-align: center; transition: border-color 0.15s; }
     .q-limit-input:focus { border-color: var(--accent); }
+
+    /* ── Draft switcher ── */
+    .draft-bar { display: flex; align-items: center; gap: 6px; padding: 10px 24px; background: var(--surface2); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .draft-bar-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); font-weight: 500; margin-right: 4px; flex-shrink: 0; }
+    .draft-pill {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px;
+      font-size: 12px; font-weight: 500;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .draft-pill:hover { border-color: var(--accent); color: var(--text2); }
+    .draft-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .draft-pill-close { opacity: 0; font-size: 11px; transition: opacity 0.15s; margin-left: 2px; }
+    .draft-pill:hover .draft-pill-close { opacity: 1; }
+    .draft-pill.active .draft-pill-close { opacity: 0.7; }
+    .draft-pill.active .draft-pill-close:hover { opacity: 1; }
+    .draft-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .btn-draft { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-draft:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-draft.adopt { border-color: var(--ok); color: var(--ok); }
+    .btn-draft.adopt:hover { background: rgba(52,211,153,0.1); }
+
     .q-textarea { display: block; width: 100%; background: transparent; border: none; outline: none; resize: none; padding: 20px 24px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; line-height: 1.9; min-height: 220px; }
     .q-textarea::placeholder { color: var(--text3); }
     .q-footer { padding: 12px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
@@ -147,10 +190,10 @@
     .badge-warn   { background: rgba(251,191,36,0.12);  color: var(--warn);  border: 1px solid rgba(251,191,36,0.2); }
     .badge-danger { background: rgba(248,113,113,0.12); color: var(--danger);border: 1px solid rgba(248,113,113,0.2); }
     .badge-none   { background: var(--surface);         color: var(--text3); border: 1px solid var(--border); }
+
     .empty-state { text-align: center; padding: 60px 24px; color: var(--text3); }
     .empty-state .big { font-size: 40px; margin-bottom: 12px; }
     .empty-state p { font-size: 13px; line-height: 1.8; }
-    kbd { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text2); }
     @media (max-width: 600px) { .progress-wrap { display: none; } .main { padding: 16px 12px 0; } }
   </style>
 </head>
@@ -173,6 +216,8 @@
     <div class="header-top">
       <span class="header-title">ES文字数カウンター</span>
       <div class="header-right">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+        <button class="theme-toggle" id="themeToggle" title="テーマ切り替え"></button>
         <div class="sync-status">
           <div class="sync-dot" id="syncDot"></div>
           <span id="syncLabel">--</span>
@@ -182,11 +227,9 @@
         <button class="btn-logout" id="btnLogout">ログアウト</button>
       </div>
     </div>
-    <!-- 企業タブ (1段目) -->
     <div class="company-tabs" id="companyTabs">
       <div class="ctab-add" id="companyAdd" title="企業を追加">＋</div>
     </div>
-    <!-- 設問タブ (2段目) -->
     <div class="question-tabs" id="questionTabs">
       <div class="qtab-add" id="questionAdd" title="設問を追加">＋</div>
     </div>
@@ -195,7 +238,7 @@
   <div class="main" id="mainArea">
     <div class="empty-state" id="emptyState">
       <div class="big">✏️</div>
-      <p>上の <strong>＋</strong> で企業を追加してください</p>
+      <p id="emptyMsg">上の <strong>＋</strong> で企業を追加してください</p>
     </div>
   </div>
 </div>
@@ -213,9 +256,10 @@
   const db   = firebase.firestore();
 
   // ── State ──
-  // companies: [{ id, name, questions: [{id, label, text, limit}], activeQId }]
+  // companies[{ id, name, questions:[{ id, label, limit, activeDraftId, drafts:[{id,name,text}] }], activeQId }]
   let companies       = [];
   let activeCompanyId = null;
+  let theme           = 'dark';
   let currentUser     = null;
   let saveTimer       = null;
 
@@ -227,13 +271,25 @@
     if (p>=1) return 'danger'; if (p>=0.9) return 'warn'; if (p>=0.5) return 'ok';
     return 'none';
   }
+  function activeCompany() { return companies.find(c=>c.id===activeCompanyId); }
+  function activeQuestion() { const c=activeCompany(); if(!c) return null; return (c.questions||[]).find(q=>q.id===c.activeQId); }
+  function activeDraft() { const q=activeQuestion(); if(!q) return null; return (q.drafts||[]).find(d=>d.id===q.activeDraftId); }
 
-  function activeCompany() { return companies.find(c => c.id === activeCompanyId); }
+  // ── Theme ──
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('themeIcon').textContent = t==='dark' ? '🌙' : '☀️';
+  }
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    applyTheme(theme==='dark' ? 'light' : 'dark');
+    scheduleSave();
+  });
 
   // ── Sync ──
   function setSyncStatus(s) {
-    const dot = document.getElementById('syncDot'), lbl = document.getElementById('syncLabel');
-    dot.className = 'sync-dot';
+    const dot=document.getElementById('syncDot'), lbl=document.getElementById('syncLabel');
+    dot.className='sync-dot';
     if (s==='syncing') { dot.classList.add('syncing'); lbl.textContent='保存中...'; }
     else if (s==='synced') { dot.classList.add('synced'); lbl.textContent='保存済み'; }
     else { lbl.textContent='--'; }
@@ -247,7 +303,7 @@
     if (!currentUser) return;
     try {
       await db.collection('users').doc(currentUser.uid).set({
-        companies, activeCompanyId,
+        companies, activeCompanyId, theme,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       setSyncStatus('synced');
@@ -261,6 +317,17 @@
         const d = doc.data();
         companies       = d.companies       || [];
         activeCompanyId = d.activeCompanyId || null;
+        theme           = d.theme           || 'dark';
+        // migrate old data (questions without drafts)
+        companies.forEach(c => {
+          (c.questions||[]).forEach(q => {
+            if (!q.drafts) {
+              q.drafts = [{ id: genId(), name: '草案A', text: q.text||'' }];
+              q.activeDraftId = q.drafts[0].id;
+              delete q.text;
+            }
+          });
+        });
       }
     } catch(e) { console.error(e); }
   }
@@ -276,133 +343,107 @@
     if (user) {
       currentUser = user;
       const av = document.getElementById('userAvatar');
-      if (user.photoURL) { av.src = user.photoURL; av.style.display='block'; }
+      if (user.photoURL) { av.src=user.photoURL; av.style.display='block'; }
       await loadFromCloud();
-      if (activeCompanyId && !companies.find(c => c.id===activeCompanyId))
-        activeCompanyId = companies.length > 0 ? companies[0].id : null;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appScreen').style.display   = 'block';
+      applyTheme(theme);
+      if (activeCompanyId && !companies.find(c=>c.id===activeCompanyId))
+        activeCompanyId = companies.length>0 ? companies[0].id : null;
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('appScreen').style.display='block';
       setSyncStatus('synced');
       render();
     } else {
-      currentUser = null; companies = []; activeCompanyId = null;
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('appScreen').style.display   = 'none';
+      currentUser=null; companies=[]; activeCompanyId=null;
+      document.getElementById('loginScreen').style.display='flex';
+      document.getElementById('appScreen').style.display='none';
     }
   });
 
   // ── Render ──
-  function render() {
-    renderCompanyTabs();
-    renderQuestionTabs();
-    renderMain();
-    renderTitle();
-    updateTotalBadge();
-  }
+  function render() { renderCompanyTabs(); renderQuestionTabs(); renderMain(); renderTitle(); updateTotalBadge(); }
 
   function renderTitle() {
-    const c = activeCompany();
-    document.title = c ? c.name || 'ES文字数カウンター' : 'ES文字数カウンター';
+    const c=activeCompany();
+    document.title = c ? (c.name||'ES文字数カウンター') : 'ES文字数カウンター';
   }
 
-  // ── Company Tabs ──
   function renderCompanyTabs() {
-    const bar = document.getElementById('companyTabs');
-    bar.querySelectorAll('.ctab').forEach(t => t.remove());
-    const add = document.getElementById('companyAdd');
-
+    const bar=document.getElementById('companyTabs');
+    bar.querySelectorAll('.ctab').forEach(t=>t.remove());
+    const add=document.getElementById('companyAdd');
     companies.forEach(c => {
-      const tab = document.createElement('div');
-      tab.className = 'ctab' + (c.id===activeCompanyId ? ' active' : '');
-
-      const nameEl = document.createElement('span');
-      nameEl.className = 'ctab-name';
-      nameEl.contentEditable = c.id===activeCompanyId ? 'true' : 'false';
-      nameEl.textContent = c.name || '企業名';
-      nameEl.addEventListener('input', () => {
-        c.name = nameEl.textContent.trim(); renderTitle(); scheduleSave();
-      });
-      nameEl.addEventListener('keydown', e => {
-        if (e.key==='Enter') { e.preventDefault(); nameEl.blur(); }
-      });
-      nameEl.addEventListener('click', e => {
-        if (c.id===activeCompanyId) e.stopPropagation();
-      });
-
-      const cls = document.createElement('span');
-      cls.className = 'ctab-close'; cls.textContent = '×';
-      cls.title = '企業を削除';
-      cls.addEventListener('click', e => { e.stopPropagation(); removeCompany(c.id); });
-
+      const tab=document.createElement('div');
+      tab.className='ctab'+(c.id===activeCompanyId?' active':'');
+      const nameEl=document.createElement('span');
+      nameEl.className='ctab-name';
+      nameEl.contentEditable=c.id===activeCompanyId?'true':'false';
+      nameEl.textContent=c.name||'企業名';
+      nameEl.addEventListener('input',()=>{ c.name=nameEl.textContent.trim(); renderTitle(); scheduleSave(); });
+      nameEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();nameEl.blur();} });
+      nameEl.addEventListener('click',e=>{ if(c.id===activeCompanyId) e.stopPropagation(); });
+      const cls=document.createElement('span');
+      cls.className='ctab-close'; cls.textContent='×'; cls.title='企業を削除';
+      cls.addEventListener('click',e=>{ e.stopPropagation(); removeCompany(c.id); });
       tab.appendChild(nameEl); tab.appendChild(cls);
-      tab.addEventListener('click', () => {
-        if (activeCompanyId !== c.id) { activeCompanyId = c.id; render(); scheduleSave(); }
-      });
-      bar.insertBefore(tab, add);
+      tab.addEventListener('click',()=>{ if(activeCompanyId!==c.id){activeCompanyId=c.id;render();scheduleSave();} });
+      bar.insertBefore(tab,add);
     });
   }
 
-  // ── Question Tabs ──
   function renderQuestionTabs() {
-    const bar = document.getElementById('questionTabs');
-    bar.querySelectorAll('.qtab').forEach(t => t.remove());
-    const add = document.getElementById('questionAdd');
-    const c   = activeCompany();
-
-    if (!c) return;
-
-    (c.questions||[]).forEach((q, i) => {
-      const state = getState(countChars(q.text), q.limit);
-      const tab = document.createElement('div');
-      tab.className = 'qtab' + (q.id===c.activeQId ? ' active' : '');
-
-      const dot = document.createElement('span');
-      dot.className = `qtab-dot ${state!=='none'?state:''}`;
-
-      const lbl = document.createElement('span');
-      lbl.textContent = q.label ? (q.label.length>16 ? q.label.slice(0,16)+'…' : q.label) : `設問 ${i+1}`;
-
-      const cls = document.createElement('span');
-      cls.className = 'qtab-close'; cls.textContent = '×';
-      cls.addEventListener('click', e => { e.stopPropagation(); removeQuestion(c.id, q.id); });
-
+    const bar=document.getElementById('questionTabs');
+    bar.querySelectorAll('.qtab').forEach(t=>t.remove());
+    const add=document.getElementById('questionAdd');
+    const c=activeCompany(); if(!c) return;
+    (c.questions||[]).forEach((q,i)=>{
+      const d=activeDraftForQ(q);
+      const state=getState(countChars(d?d.text:''), q.limit);
+      const tab=document.createElement('div');
+      tab.className='qtab'+(q.id===c.activeQId?' active':'');
+      const dot=document.createElement('span');
+      dot.className=`qtab-dot ${state!=='none'?state:''}`;
+      const lbl=document.createElement('span');
+      lbl.textContent=q.label?(q.label.length>16?q.label.slice(0,16)+'…':q.label):`設問 ${i+1}`;
+      const cls=document.createElement('span');
+      cls.className='qtab-close'; cls.textContent='×';
+      cls.addEventListener('click',e=>{e.stopPropagation();removeQuestion(c.id,q.id);});
       tab.appendChild(dot); tab.appendChild(lbl); tab.appendChild(cls);
-      tab.addEventListener('click', () => { c.activeQId = q.id; render(); scheduleSave(); });
-      bar.insertBefore(tab, add);
+      tab.addEventListener('click',()=>{ c.activeQId=q.id; render(); scheduleSave(); });
+      bar.insertBefore(tab,add);
     });
   }
 
-  // ── Main card ──
+  function activeDraftForQ(q) {
+    return (q.drafts||[]).find(d=>d.id===q.activeDraftId);
+  }
+
   function renderMain() {
-    const area  = document.getElementById('mainArea');
-    const empty = document.getElementById('emptyState');
-    const c = activeCompany();
-
+    const area=document.getElementById('mainArea');
+    const empty=document.getElementById('emptyState');
+    const c=activeCompany();
     if (!c) {
-      empty.style.display = 'block';
-      empty.querySelector('p').innerHTML = '上の <strong>＋</strong> で企業を追加してください';
-      const old = area.querySelector('.question-card'); if (old) old.remove();
+      empty.style.display='block';
+      document.getElementById('emptyMsg').innerHTML='上の <strong>＋</strong> で企業を追加してください';
+      const old=area.querySelector('.question-card'); if(old) old.remove();
       return;
     }
-
-    const q = (c.questions||[]).find(q => q.id===c.activeQId);
+    const q=activeQuestion();
     if (!q) {
-      empty.style.display = 'block';
-      empty.querySelector('p').innerHTML = '下段の <strong>＋</strong> で設問を追加してください';
-      const old = area.querySelector('.question-card'); if (old) old.remove();
+      empty.style.display='block';
+      document.getElementById('emptyMsg').innerHTML='下段の <strong>＋</strong> で設問を追加してください';
+      const old=area.querySelector('.question-card'); if(old) old.remove();
       return;
     }
-
-    empty.style.display = 'none';
-    let card = area.querySelector('.question-card');
-    if (!card) { card = buildCard(); area.appendChild(card); }
+    empty.style.display='none';
+    let card=area.querySelector('.question-card');
+    if (!card) { card=buildCard(); area.appendChild(card); }
     fillCard(card, q);
   }
 
   function buildCard() {
-    const card = document.createElement('div');
-    card.className = 'question-card';
-    card.innerHTML = `
+    const card=document.createElement('div');
+    card.className='question-card';
+    card.innerHTML=`
       <div class="q-header">
         <span class="q-sublabel">設問文</span>
         <textarea class="q-title-input" rows="2" placeholder="例：学生時代に最も力を入れたことを教えてください（400字）" id="cardLabel"></textarea>
@@ -413,6 +454,14 @@
             <span>字</span>
           </div>
           <span style="font-size:11px;color:var(--text3)">※ 制限なしの場合は空欄</span>
+        </div>
+      </div>
+      <div class="draft-bar" id="draftBar">
+        <span class="draft-bar-label">草案</span>
+        <div id="draftPills"></div>
+        <div class="draft-actions">
+          <button class="btn-draft" id="btnDraftAdd">＋ 草案を追加</button>
+          <button class="btn-draft" id="btnDraftDupe">複製</button>
         </div>
       </div>
       <textarea class="q-textarea" id="cardText" placeholder="ここに文章を入力..."></textarea>
@@ -430,40 +479,72 @@
         <span class="status-badge badge-none" id="cardBadge">未入力</span>
       </div>`;
 
-    card.querySelector('#cardLabel').addEventListener('input', e => {
-      const q = currentQ(); if (!q) return;
-      q.label = e.target.value; renderQuestionTabs(); scheduleSave();
+    card.querySelector('#cardLabel').addEventListener('input',e=>{
+      const q=activeQuestion(); if(!q) return;
+      q.label=e.target.value; renderQuestionTabs(); scheduleSave();
     });
-    card.querySelector('#cardLimit').addEventListener('input', e => {
-      const q = currentQ(); if (!q) return;
-      q.limit = parseInt(e.target.value)||0; updateCounter(card, q); scheduleSave();
+    card.querySelector('#cardLimit').addEventListener('input',e=>{
+      const q=activeQuestion(); if(!q) return;
+      q.limit=parseInt(e.target.value)||0; updateCounter(card,q); scheduleSave();
     });
-    card.querySelector('#cardText').addEventListener('input', e => {
-      const q = currentQ(); if (!q) return;
-      q.text = e.target.value; updateCounter(card, q); renderQuestionTabs(); scheduleSave();
+    card.querySelector('#cardText').addEventListener('input',e=>{
+      const q=activeQuestion(); if(!q) return;
+      const d=activeDraftForQ(q); if(!d) return;
+      d.text=e.target.value; updateCounter(card,q); renderQuestionTabs(); scheduleSave();
     });
-    card.querySelector('#cardText').addEventListener('input', function() {
+    card.querySelector('#cardText').addEventListener('input',function(){
       this.style.height='auto'; this.style.height=Math.max(220,this.scrollHeight)+'px';
     });
+    card.querySelector('#btnDraftAdd').addEventListener('click',()=>{ addDraft(); });
+    card.querySelector('#btnDraftDupe').addEventListener('click',()=>{ dupeDraft(); });
     return card;
   }
 
-  function currentQ() {
-    const c = activeCompany(); if (!c) return null;
-    return (c.questions||[]).find(q => q.id===c.activeQId);
-  }
-
   function fillCard(card, q) {
-    card.querySelector('#cardLabel').value = q.label||'';
-    card.querySelector('#cardLimit').value = q.limit||'';
-    const ta = card.querySelector('#cardText');
-    ta.value = q.text||'';
+    card.querySelector('#cardLabel').value=q.label||'';
+    card.querySelector('#cardLimit').value=q.limit||'';
+    // render draft pills
+    const pillsEl=card.querySelector('#draftPills');
+    pillsEl.innerHTML='';
+    (q.drafts||[]).forEach(d=>{
+      const pill=document.createElement('button');
+      pill.className='draft-pill'+(d.id===q.activeDraftId?' active':'');
+      const nameSpan=document.createElement('span');
+      nameSpan.contentEditable='true';
+      nameSpan.textContent=d.name||'草案';
+      nameSpan.style.outline='none';
+      nameSpan.style.minWidth='28px';
+      nameSpan.addEventListener('input',()=>{ d.name=nameSpan.textContent.trim(); scheduleSave(); });
+      nameSpan.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();nameSpan.blur();} });
+      nameSpan.addEventListener('click',e=>{ if(d.id===q.activeDraftId) e.stopPropagation(); });
+      const cls=document.createElement('span');
+      cls.className='draft-pill-close'; cls.textContent='×';
+      cls.addEventListener('click',e=>{
+        e.stopPropagation();
+        if ((q.drafts||[]).length<=1) { alert('最後の草案は削除できません'); return; }
+        if (!confirm(`「${d.name}」を削除しますか？`)) return;
+        const idx=q.drafts.findIndex(x=>x.id===d.id);
+        q.drafts.splice(idx,1);
+        if (q.activeDraftId===d.id) q.activeDraftId=q.drafts[Math.max(0,idx-1)].id;
+        render(); scheduleSave();
+      });
+      pill.appendChild(nameSpan); pill.appendChild(cls);
+      pill.addEventListener('click',()=>{
+        if (q.activeDraftId!==d.id) { q.activeDraftId=d.id; render(); scheduleSave(); }
+      });
+      pillsEl.appendChild(pill);
+    });
+    // fill textarea
+    const d=activeDraftForQ(q);
+    const ta=card.querySelector('#cardText');
+    ta.value=d?d.text||'':'';
     ta.style.height='auto'; ta.style.height=Math.max(220,ta.scrollHeight)+'px';
-    updateCounter(card, q);
+    updateCounter(card,q);
   }
 
-  function updateCounter(card, q) {
-    const count=countChars(q.text), limit=q.limit||0, state=getState(count,limit);
+  function updateCounter(card,q) {
+    const d=activeDraftForQ(q);
+    const count=countChars(d?d.text:''), limit=q.limit||0, state=getState(count,limit);
     const cm={none:'var(--text)',ok:'var(--ok)',warn:'var(--warn)',danger:'var(--danger)'};
     const bc={none:'badge-none',ok:'badge-ok',warn:'badge-warn',danger:'badge-danger'};
     const bl={none:count===0?'未入力':'入力中',ok:'記入中',warn:'残り少',danger:'超過！'};
@@ -489,65 +570,85 @@
   }
 
   function updateTotalBadge() {
-    const total = companies.reduce((s,c)=>(c.questions||[]).reduce((s2,q)=>s2+countChars(q.text),s),0);
+    const total=companies.reduce((s,c)=>(c.questions||[]).reduce((s2,q)=>{
+      const d=activeDraftForQ(q); return s2+countChars(d?d.text:'');
+    },s),0);
     document.getElementById('totalBadge').textContent=`合計 ${total} 字`;
   }
 
-  // ── Actions ──
+  // ── Draft actions ──
+  function draftLabel(n) {
+    const labels=['A','B','C','D','E','F','G','H'];
+    return `草案${labels[n]||n+1}`;
+  }
+  function addDraft() {
+    const q=activeQuestion(); if(!q) return;
+    if (!q.drafts) q.drafts=[];
+    const id=genId();
+    q.drafts.push({ id, name: draftLabel(q.drafts.length), text:'' });
+    q.activeDraftId=id;
+    render(); scheduleSave();
+    setTimeout(()=>{ const el=document.getElementById('cardText'); if(el) el.focus(); },50);
+  }
+  function dupeDraft() {
+    const q=activeQuestion(); if(!q) return;
+    const d=activeDraftForQ(q); if(!d) return;
+    if (!q.drafts) q.drafts=[];
+    const id=genId();
+    q.drafts.push({ id, name: d.name+'（複製）', text: d.text });
+    q.activeDraftId=id;
+    render(); scheduleSave();
+  }
+
+  // ── Company/Question actions ──
   function addCompany() {
-    const id = genId();
+    const id=genId();
     companies.push({ id, name:'企業名', questions:[], activeQId:null });
-    activeCompanyId = id;
+    activeCompanyId=id;
     render(); scheduleSave();
-    // Focus name
-    setTimeout(() => {
-      const tabs = document.querySelectorAll('.ctab');
-      const last = tabs[tabs.length-1];
-      if (last) { const nameEl = last.querySelector('.ctab-name'); if (nameEl) { nameEl.focus(); document.execCommand('selectAll'); } }
-    }, 50);
+    setTimeout(()=>{
+      const tabs=document.querySelectorAll('.ctab');
+      const last=tabs[tabs.length-1];
+      if(last){const n=last.querySelector('.ctab-name');if(n){n.focus();document.execCommand('selectAll');}}
+    },50);
   }
-
   function removeCompany(id) {
-    if (!confirm('この企業と設問をすべて削除しますか？')) return;
-    const idx = companies.findIndex(c=>c.id===id);
+    if(!confirm('この企業と設問をすべて削除しますか？')) return;
+    const idx=companies.findIndex(c=>c.id===id);
     companies.splice(idx,1);
-    if (activeCompanyId===id) activeCompanyId = companies.length>0?companies[Math.max(0,idx-1)].id:null;
+    if(activeCompanyId===id) activeCompanyId=companies.length>0?companies[Math.max(0,idx-1)].id:null;
     render(); scheduleSave();
   }
-
   function addQuestion() {
-    const c = activeCompany(); if (!c) return;
-    const id = genId();
-    if (!c.questions) c.questions=[];
-    c.questions.push({ id, label:'', text:'', limit:0 });
-    c.activeQId = id;
+    const c=activeCompany(); if(!c) return;
+    const id=genId(), did=genId();
+    if(!c.questions) c.questions=[];
+    c.questions.push({ id, label:'', limit:0, activeDraftId:did, drafts:[{id:did,name:'草案A',text:''}] });
+    c.activeQId=id;
     render(); scheduleSave();
-    setTimeout(() => { const el=document.getElementById('cardLabel'); if(el) el.focus(); }, 50);
+    setTimeout(()=>{ const el=document.getElementById('cardLabel'); if(el) el.focus(); },50);
   }
-
-  function removeQuestion(companyId, qId) {
-    const c = companies.find(c=>c.id===companyId); if(!c) return;
-    const idx = c.questions.findIndex(q=>q.id===qId);
+  function removeQuestion(companyId,qId) {
+    const c=companies.find(c=>c.id===companyId); if(!c) return;
+    const idx=c.questions.findIndex(q=>q.id===qId);
     c.questions.splice(idx,1);
-    if (c.activeQId===qId) c.activeQId = c.questions.length>0?c.questions[Math.max(0,idx-1)].id:null;
+    if(c.activeQId===qId) c.activeQId=c.questions.length>0?c.questions[Math.max(0,idx-1)].id:null;
     render(); scheduleSave();
   }
 
-  // ── Events ──
   document.getElementById('companyAdd').addEventListener('click', addCompany);
   document.getElementById('questionAdd').addEventListener('click', addQuestion);
 
-  document.addEventListener('keydown', e => {
-    const tag = document.activeElement.tagName;
-    const ce  = document.activeElement.contentEditable;
-    if (tag==='INPUT'||tag==='TEXTAREA'||ce==='true') return;
-    if (e.key==='n'||e.key==='N') addQuestion();
-    if (e.key==='ArrowRight'||e.key==='ArrowLeft') {
-      const c = activeCompany(); if(!c||!c.questions||!c.questions.length) return;
-      const idx = c.questions.findIndex(q=>q.id===c.activeQId);
-      if (idx===-1) return;
-      const next = e.key==='ArrowRight'?(idx+1)%c.questions.length:(idx-1+c.questions.length)%c.questions.length;
-      c.activeQId = c.questions[next].id; render(); scheduleSave();
+  document.addEventListener('keydown',e=>{
+    const tag=document.activeElement.tagName;
+    const ce=document.activeElement.contentEditable;
+    if(tag==='INPUT'||tag==='TEXTAREA'||ce==='true') return;
+    if(e.key==='n'||e.key==='N') addQuestion();
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
+      const c=activeCompany(); if(!c||!c.questions||!c.questions.length) return;
+      const idx=c.questions.findIndex(q=>q.id===c.activeQId); if(idx===-1) return;
+      const next=e.key==='ArrowRight'?(idx+1)%c.questions.length:(idx-1+c.questions.length)%c.questions.length;
+      c.activeQId=c.questions[next].id; render(); scheduleSave();
     }
   });
 </script>
