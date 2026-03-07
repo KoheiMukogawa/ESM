@@ -254,7 +254,6 @@
           <div class="sync-dot" id="syncDot"></div>
           <span id="syncLabel">--</span>
         </div>
-        <div class="total-badge" id="totalBadge">合計 0 字</div>
         <img class="user-avatar" id="userAvatar" src="" alt="" style="display:none">
         <button class="btn-logout" id="btnLogout">ログアウト</button>
       </div>
@@ -518,7 +517,7 @@
 
       const del=document.createElement('span');
       del.className='qitem-del'; del.textContent='×';
-      del.addEventListener('click',e=>{e.stopPropagation();removeQuestion(c.id,q.id);});
+      del.addEventListener('click',e=>{e.stopPropagation();if(confirm('この設問を削除しますか？')) removeQuestion(c.id,q.id);});
 
       item.appendChild(chk); item.appendChild(body); item.appendChild(dot); item.appendChild(del);
       item.addEventListener('click',()=>{c.activeQId=q.id;renderSidebar();renderMain();scheduleSave();});
