@@ -165,6 +165,11 @@
     .btn-done{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;flex-shrink:0;color:var(--text3);}
     .btn-done:hover{border-color:var(--ok);color:var(--ok);}
     .btn-done.done{border-color:var(--ok);background:var(--ok);color:#fff;}
+    .btn-copy{position:absolute;top:10px;right:12px;width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:0;transition:all .15s;}
+    .q-textarea-wrap{position:relative;}
+    .q-textarea-wrap:hover .btn-copy{opacity:1;}
+    .btn-copy:hover{border-color:var(--accent);color:var(--accent);background:var(--surface);}
+    .btn-copy.copied{border-color:var(--ok);color:var(--ok);background:var(--surface);}
     .empty-state{text-align:center;padding:60px 24px;color:var(--text3);}
     .empty-state .big{font-size:40px;margin-bottom:12px;}
     .empty-state p{font-size:13px;line-height:1.8;}
@@ -310,6 +315,26 @@
   </div>
 </div>
 
+<!-- ── Add Draft Modal ── -->
+<div class="modal-bg" id="addDraftBg">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-head">
+      <h2>📄 草案を追加</h2>
+      <button class="modal-close" id="addDraftClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">草案名</label>
+        <input class="modal-input" id="newDraftName" type="text" placeholder="例：ガクチカA">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="addDraftCancel">キャンセル</button>
+      <button class="btn-primary" id="addDraftConfirm">追加する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Help Modal ── -->
 <div class="modal-bg" id="helpBg">
   <div class="modal" id="helpModal">
@@ -321,7 +346,7 @@
 
       <div class="help-section">
         <h3>💾 保存の仕組み</h3>
-        <p>文字を打ち終えてから <strong>10秒後</strong> に自動でクラウドへ保存されます。すぐ保存したいときはヘッダーの <span class="htag">💾 保存</span> ボタンを押してください。ブラウザを閉じる際にも自動で保存が走ります。</p>
+        <p>文字を打ち終えてから <strong>1.5秒後</strong> に自動でクラウドへ保存されます。すぐ保存したいときはヘッダーの <span class="htag">💾 保存</span> ボタンを押してください。ブラウザを閉じる際にも自動で保存が走ります。</p>
         <div class="save-legend">
           <div class="save-legend-item"><div class="dot-ex" style="background:var(--warn)"></div>保存中（黄点滅）</div>
           <div class="save-legend-item"><div class="dot-ex" style="background:var(--ok)"></div>保存済み（緑点灯）</div>
@@ -638,7 +663,10 @@
           <button class="btn-draft" id="btnDraftDupe">複製</button>
         </div>
       </div>
-      <textarea class="q-textarea" id="cardText" placeholder="ここに文章を入力..."></textarea>
+      <div class="q-textarea-wrap">
+        <textarea class="q-textarea" id="cardText" placeholder="ここに文章を入力..."></textarea>
+        <button class="btn-copy" id="btnCopy" title="コピー">⧉</button>
+      </div>
       <div class="q-footer">
         <div class="counter-display">
           <span class="counter-current" id="cardCurrent">0</span>
@@ -668,6 +696,15 @@
     });
     card.querySelector('#cardText').addEventListener('input',function(){
       this.style.height='auto';this.style.height=Math.max(220,this.scrollHeight)+'px';
+    });
+    card.querySelector('#btnCopy').addEventListener('click',()=>{
+      const ta=card.querySelector('#cardText');
+      navigator.clipboard.writeText(ta.value).then(()=>{
+        const btn=card.querySelector('#btnCopy');
+        btn.classList.add('copied');
+        btn.textContent='✓';
+        setTimeout(()=>{btn.classList.remove('copied');btn.textContent='⧉';},1500);
+      });
     });
     card.querySelector('#btnDraftAdd').addEventListener('click',addDraft);
     card.querySelector('#btnDraftDupe').addEventListener('click',dupeDraft);
@@ -744,12 +781,26 @@
   // ── Draft ──
   function addDraft(){
     const q=activeQuestion();if(!q) return;
+    const defaultName=`草案${(q.drafts||[]).length+1}`;
+    document.getElementById('newDraftName').value=defaultName;
+    document.getElementById('addDraftBg').classList.add('open');
+    setTimeout(()=>{
+      const el=document.getElementById('newDraftName');
+      if(el){el.focus();el.select();}
+    },50);
+  }
+  function confirmAddDraft(){
+    const q=activeQuestion();if(!q) return;
+    const name=document.getElementById('newDraftName').value.trim()||`草案${(q.drafts||[]).length+1}`;
     if(!q.drafts) q.drafts=[];
     const id=genId();
-    q.drafts.push({id,name:`草案${q.drafts.length+1}`,text:''});
-    q.activeDraftId=id;render();scheduleSave();
+    q.drafts.push({id,name,text:''});
+    q.activeDraftId=id;
+    document.getElementById('addDraftBg').classList.remove('open');
+    render();scheduleSave();
     setTimeout(()=>{const el=document.getElementById('cardText');if(el) el.focus();},50);
   }
+  function closeAddDraftModal(){document.getElementById('addDraftBg').classList.remove('open');}
   function dupeDraft(){
     const q=activeQuestion();if(!q) return;
     const d=activeDraftForQ(q);if(!d) return;
@@ -813,10 +864,16 @@
   document.getElementById('newName').addEventListener('keydown',e=>{if(e.key==='Enter') confirmAddCompany();});
 
   document.getElementById('questionAdd').addEventListener('click',addQuestion);
+  document.getElementById('addDraftConfirm').addEventListener('click',confirmAddDraft);
+  document.getElementById('addDraftCancel').addEventListener('click',closeAddDraftModal);
+  document.getElementById('addDraftClose').addEventListener('click',closeAddDraftModal);
+  document.getElementById('addDraftBg').addEventListener('click',e=>{if(e.target===document.getElementById('addDraftBg')) closeAddDraftModal();});
+  document.getElementById('newDraftName').addEventListener('keydown',e=>{if(e.key==='Enter') confirmAddDraft();});
 
   document.getElementById('btnHelp').addEventListener('click',()=>document.getElementById('helpBg').classList.add('open'));
   document.getElementById('helpClose').addEventListener('click',()=>document.getElementById('helpBg').classList.remove('open'));
-  document.getElementById('helpBg').addEventListener('click',e=>{if(e.target===document.getElementById('helpBg')) document.getElementById('helpBg').classList.remove('open');});
+  document.getElementById('helpBg').addEventListener('click',e=>{if(e.target===document.getElementById('helpBg')) document.getElementById('helpBg').classList.remove('open');
+    document.getElementById('addDraftBg').classList.remove('open');});
 
   document.addEventListener('keydown',e=>{
     const tag=document.activeElement.tagName;
@@ -826,6 +883,7 @@
     if(e.key==='Escape'){
       document.getElementById('addCompanyBg').classList.remove('open');
       document.getElementById('helpBg').classList.remove('open');
+    document.getElementById('addDraftBg').classList.remove('open');
     }
   });
 </script>
