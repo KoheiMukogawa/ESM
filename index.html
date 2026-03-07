@@ -449,8 +449,10 @@
   function getState(count,limit){
     if(!limit) return 'none';
     const p=count/limit;
-    if(p>=1) return 'danger'; if(p>=.9) return 'warn'; if(p>=.5) return 'ok';
-    return 'none';
+    if(p>1)   return 'danger';   // 超過 → 赤
+    if(p>=.95) return 'ok';      // 95%以上 → 緑
+    if(p>=.8) return 'warn';     // 80%以上 → 黄
+    return 'none';               // それ以下 → 無色
   }
   const activeCompany=()=>companies.find(c=>c.id===activeCompanyId);
   const activeQuestion=()=>{const c=activeCompany();return c?(c.questions||[]).find(q=>q.id===c.activeQId):null;};
