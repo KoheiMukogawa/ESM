@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ES Manager</title>
+  <title>ES文字数カウンター</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -116,6 +116,25 @@
     .ctab-add { padding: 8px 14px; font-size: 18px; color: var(--text3); cursor: pointer; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
     .ctab-add:hover { color: var(--accent); }
 
+
+    /* ── Company info panel ── */
+    .info-panel { display: none; padding: 12px 24px; background: var(--surface2); border-bottom: 1px solid var(--border); gap: 16px; flex-wrap: wrap; align-items: center; }
+    .info-panel.open { display: flex; }
+    .info-field { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px; }
+    .info-field-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); font-weight: 500; white-space: nowrap; width: 52px; flex-shrink: 0; }
+    .info-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text); font-family: "Noto Sans JP", sans-serif; font-size: 12px; outline: none; transition: border-color 0.15s; }
+    .info-input:focus { border-color: var(--accent); }
+    .info-input::placeholder { color: var(--text3); }
+    .btn-open-url { font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--accent); cursor: pointer; transition: all 0.15s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-open-url:hover { background: rgba(108,143,255,0.1); }
+    .ctab-deadline { font-size: 10px; font-family: "DM Mono", monospace; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--border); color: var(--text3); background: transparent; }
+    .ctab-deadline.warn   { color: var(--warn);   border-color: var(--warn);   background: rgba(251,191,36,0.08); }
+    .ctab-deadline.danger { color: var(--danger);  border-color: var(--danger); background: rgba(248,113,113,0.08); }
+    .ctab-deadline.done   { color: var(--text3);   border-color: var(--border); opacity: 0.5; }
+    .ctab-settings { font-size: 11px; opacity: 0; transition: opacity 0.15s; margin-left: 2px; cursor: pointer; color: var(--text3); }
+    .ctab:hover .ctab-settings { opacity: 1; }
+    .ctab.active .ctab-settings { opacity: 0.6; }
+    .ctab-settings:hover { color: var(--accent) !important; opacity: 1 !important; }
     /* ── Question tabs ── */
     .question-tabs { display: flex; align-items: center; gap: 2px; padding: 0 24px; background: var(--bg); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
     .question-tabs::-webkit-scrollbar { display: none; }
@@ -202,8 +221,8 @@
 <div id="loginScreen">
   <div class="login-box">
     <div class="logo">✏️</div>
-    <h2>ES Manager</h2>
-    <p>天才向川君が作成したES一元管理システム<br>Googleアカウントでログインすると、<br>どのデバイスからでも作業を続けられます。</p>
+    <h2>ES文字数カウンター</h2>
+    <p>Googleアカウントでログインすると、<br>どのデバイスからでも作業を続けられます。</p>
     <button class="btn-google" id="btnLogin">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
       Googleでログイン
@@ -229,6 +248,21 @@
     </div>
     <div class="company-tabs" id="companyTabs">
       <div class="ctab-add" id="companyAdd" title="企業を追加">＋</div>
+    </div>
+    <div class="info-panel" id="infoPanel">
+      <div class="info-field">
+        <span class="info-field-label">URL</span>
+        <input class="info-input" id="infoUrl" type="url" placeholder="https://mypage.example.com">
+        <a class="btn-open-url" id="btnOpenUrl" href="#" target="_blank" rel="noopener">開く 🔗</a>
+      </div>
+      <div class="info-field">
+        <span class="info-field-label">ID</span>
+        <input class="info-input" id="infoId" type="text" placeholder="ログインID / メールアドレス">
+      </div>
+      <div class="info-field">
+        <span class="info-field-label">期限</span>
+        <input class="info-input" id="infoDeadline" type="date" style="width:140px;flex:none;">
+      </div>
     </div>
     <div class="question-tabs" id="questionTabs">
       <div class="qtab-add" id="questionAdd" title="設問を追加">＋</div>
@@ -262,6 +296,7 @@
   let theme           = 'dark';
   let currentUser     = null;
   let saveTimer       = null;
+  let infoPanelOpenId = null;
 
   function genId() { return Math.random().toString(36).slice(2, 9); }
   function countChars(t) { return (t||'').replace(/\n/g,'').length; }
@@ -360,14 +395,54 @@
   });
 
   // ── Render ──
-  function render() { renderCompanyTabs(); renderQuestionTabs(); renderMain(); renderTitle(); updateTotalBadge(); }
+  function render() { renderCompanyTabs(); renderInfoPanel(); renderQuestionTabs(); renderMain(); renderTitle(); updateTotalBadge(); }
 
   function renderTitle() {
     const c=activeCompany();
     document.title = c ? (c.name||'ES文字数カウンター') : 'ES文字数カウンター';
   }
 
-  function renderCompanyTabs() {
+  // ── Deadline helpers ──
+  function deadlineState(dl) {
+    if (!dl) return { cls:'', label:'' };
+    const now=new Date(); now.setHours(0,0,0,0);
+    const d=new Date(dl); d.setHours(0,0,0,0);
+    const diff=Math.round((d-now)/(1000*60*60*24));
+    if (diff<0)  return { cls:'done',   label:'提出済?' };
+    if (diff===0) return { cls:'danger', label:'今日！' };
+    if (diff<=3) return { cls:'danger', label:`残${diff}日` };
+    if (diff<=7) return { cls:'warn',   label:`残${diff}日` };
+    return { cls:'', label:`残${diff}日` };
+  }
+
+  function toggleInfoPanel(companyId) {
+    infoPanelOpenId = infoPanelOpenId===companyId ? null : companyId;
+    renderInfoPanel();
+  }
+
+  function renderInfoPanel() {
+    const panel=document.getElementById('infoPanel');
+    const c=companies.find(x=>x.id===infoPanelOpenId);
+    if (!c) { panel.classList.remove('open'); return; }
+    panel.classList.add('open');
+    const urlEl=document.getElementById('infoUrl');
+    const idEl=document.getElementById('infoId');
+    const dlEl=document.getElementById('infoDeadline');
+    const openBtn=document.getElementById('btnOpenUrl');
+    // remove old listeners by cloning
+    const newUrl=urlEl.cloneNode(true); urlEl.parentNode.replaceChild(newUrl,urlEl);
+    const newId=idEl.cloneNode(true);   idEl.parentNode.replaceChild(newId,idEl);
+    const newDl=dlEl.cloneNode(true);   dlEl.parentNode.replaceChild(newDl,dlEl);
+    newUrl.value=c.url||'';
+    newId.value=c.loginId||'';
+    newDl.value=c.deadline||'';
+    openBtn.href=c.url||'#';
+    newUrl.addEventListener('input',()=>{ c.url=newUrl.value.trim(); openBtn.href=c.url||'#'; scheduleSave(); });
+    newId.addEventListener('input',()=>{ c.loginId=newId.value; scheduleSave(); });
+    newDl.addEventListener('change',()=>{ c.deadline=newDl.value; renderCompanyTabs(); scheduleSave(); });
+  }
+
+    function renderCompanyTabs() {
     const bar=document.getElementById('companyTabs');
     bar.querySelectorAll('.ctab').forEach(t=>t.remove());
     const add=document.getElementById('companyAdd');
@@ -381,11 +456,23 @@
       nameEl.addEventListener('input',()=>{ c.name=nameEl.textContent.trim(); renderTitle(); scheduleSave(); });
       nameEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();nameEl.blur();} });
       nameEl.addEventListener('click',e=>{ if(c.id===activeCompanyId) e.stopPropagation(); });
+      // deadline badge
+      if (c.deadline) {
+        const badge=document.createElement('span');
+        const dl=deadlineState(c.deadline);
+        badge.className='ctab-deadline '+dl.cls;
+        badge.textContent=dl.label;
+        tab.appendChild(badge);
+      }
+      // settings gear
+      const gear=document.createElement('span');
+      gear.className='ctab-settings'; gear.textContent='⚙'; gear.title='企業情報';
+      gear.addEventListener('click',e=>{ e.stopPropagation(); toggleInfoPanel(c.id); });
       const cls=document.createElement('span');
       cls.className='ctab-close'; cls.textContent='×'; cls.title='企業を削除';
       cls.addEventListener('click',e=>{ e.stopPropagation(); removeCompany(c.id); });
-      tab.appendChild(nameEl); tab.appendChild(cls);
-      tab.addEventListener('click',()=>{ if(activeCompanyId!==c.id){activeCompanyId=c.id;render();scheduleSave();} });
+      tab.appendChild(gear); tab.appendChild(cls);
+      tab.addEventListener('click',()=>{ if(activeCompanyId!==c.id){activeCompanyId=c.id;infoPanelOpenId=null;render();scheduleSave();} });
       bar.insertBefore(tab,add);
     });
   }
