@@ -480,7 +480,13 @@
         companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
         companies.forEach(c=>(c.questions||[]).forEach(q=>{
           if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
-          if(q.done===undefined) q.done=false;
+          // migrate: move q.done to active draft
+          q.drafts.forEach(d=>{ if(d.done===undefined) d.done=false; });
+          if(q.done){
+            const ad=q.drafts.find(d=>d.id===q.activeDraftId);
+            if(ad) ad.done=true;
+          }
+          delete q.done;
         }));
       }
     }catch(e){console.error(e);}
@@ -538,7 +544,7 @@
     companies.forEach(c=>{
       const tab=document.createElement('div');
       const qs=c.questions||[];
-      const allDone=qs.length>0&&qs.every(q=>q.done);
+      const allDone=qs.length>0&&qs.every(q=>(q.drafts||[]).some(d=>d.done));
       tab.className='ctab'+(c.id===activeCompanyId?' active':'')+(allDone?' all-done':'');
 
       const nameEl=document.createElement('span');
@@ -624,15 +630,12 @@
       item.className='qitem'+(q.id===c.activeQId?' active':'');
 
       const chk=document.createElement('div');
-      chk.className='qitem-check'+(q.done?' done':'');
-      chk.textContent=q.done?'✓':'';
-      chk.title=q.done?'完了解除':'完了にする';
-      chk.addEventListener('click',e=>{
-        e.stopPropagation();q.done=!q.done;
-        const btn=document.getElementById('btnDone');
-        if(btn) btn.className='btn-done'+(q.done?' done':'');
-        scheduleSave();renderSidebar();renderCompanyTabs();
-      });
+      const qDone=(q.drafts||[]).some(d=>d.done);
+      chk.className='qitem-check'+(qDone?' done':'');
+      chk.textContent=qDone?'✓':'';
+      chk.title=qDone?'完了済み（草案にチェックあり）':'草案でチェックをつけると完了になります';
+      chk.style.pointerEvents='none';
+      chk.style.opacity=qDone?'1':'0.4';
 
       const body=document.createElement('div');body.className='qitem-body';
       const lbl=document.createElement('div');lbl.className='qitem-label';
@@ -750,7 +753,7 @@
           <button class="btn-copy-qa" id="btnCopyQA" title="この設問と解答をコピー"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> この設問</button>
           <button class="btn-copy-all" id="btnCopyAll" title="全設問と解答をコピー"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 全設問</button>
         </div>
-        <button class="btn-done" id="btnDone" title="完了にする">✓</button>
+        <button class="btn-done" id="btnDone" title="この草案を完了にする">✓</button>
       </div>`;
 
     card.querySelector('#cardLabel').addEventListener('input',e=>{
@@ -816,7 +819,8 @@
     card.querySelector('#btnDone').addEventListener('click',()=>{
       const q=activeQuestion();if(!q) return;
       q.done=!q.done;
-      card.querySelector('#btnDone').className='btn-done'+(q.done?' done':'');
+      const curDraft=activeDraftForQ(q);
+    card.querySelector('#btnDone').className='btn-done'+(curDraft&&curDraft.done?' done':'');
       renderSidebar();renderCompanyTabs();scheduleSave();
     });
     return card;
@@ -825,7 +829,8 @@
   function fillCard(card,q){
     card.querySelector('#cardLabel').value=q.label||'';
     card.querySelector('#cardLimit').value=q.limit||'';
-    card.querySelector('#btnDone').className='btn-done'+(q.done?' done':'');
+    const curDraft=activeDraftForQ(q);
+    card.querySelector('#btnDone').className='btn-done'+(curDraft&&curDraft.done?' done':'');
     const pillsEl=card.querySelector('#draftPills');
     pillsEl.innerHTML='';
     (q.drafts||[]).forEach(d=>{
@@ -939,7 +944,7 @@
     const name=document.getElementById('newDraftName').value.trim()||`草案${(q.drafts||[]).length+1}`;
     if(!q.drafts) q.drafts=[];
     const id=genId();
-    q.drafts.push({id,name,text:''});
+    q.drafts.push({id,name,text:'',done:false,memo:''});
     q.activeDraftId=id;
     document.getElementById('addDraftBg').classList.remove('open');
     render();scheduleSave();
@@ -950,7 +955,7 @@
     const q=activeQuestion();if(!q) return;
     const d=activeDraftForQ(q);if(!d) return;
     const id=genId();
-    q.drafts.push({id,name:d.name+'（複製）',text:d.text});
+    q.drafts.push({id,name:d.name+'（複製）',text:d.text,done:false,memo:d.memo||''});
     q.activeDraftId=id;render();scheduleSave();
   }
 
@@ -988,7 +993,7 @@
     const c=activeCompany();if(!c) return;
     const id=genId(),did=genId();
     if(!c.questions) c.questions=[];
-    c.questions.push({id,label:'',limit:0,done:false,activeDraftId:did,drafts:[{id:did,name:'草案1',text:''}]});
+    c.questions.push({id,label:'',limit:0,activeDraftId:did,drafts:[{id:did,name:'草案1',text:'',done:false}]});
     c.activeQId=id;render();scheduleSave();
     setTimeout(()=>{const el=document.getElementById('cardLabel');if(el) el.focus();},50);
   }
