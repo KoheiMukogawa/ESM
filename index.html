@@ -232,6 +232,18 @@
     .dot-ex{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 
     @media(max-width:640px){.sidebar{width:180px;}.progress-wrap{display:none;}}
+    /* ── Memo accordion ── */
+    .memo-accordion{border-top:1px solid var(--border);}
+    .memo-toggle{display:flex;align-items:center;gap:8px;padding:9px 22px;cursor:pointer;background:var(--surface2);transition:background .15s;user-select:none;}
+    .memo-toggle:hover{background:var(--surface);}
+    .memo-toggle-icon{font-size:10px;color:var(--text3);transition:transform .2s;flex-shrink:0;}
+    .memo-toggle.open .memo-toggle-icon{transform:rotate(90deg);}
+    .memo-toggle-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
+    .memo-toggle-preview{flex:1;font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .memo-body{display:none;padding:0;}
+    .memo-body.open{display:block;}
+    .memo-textarea{display:block;width:100%;background:var(--surface2);border:none;outline:none;resize:none;padding:12px 22px;color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;min-height:80px;border-top:1px solid var(--border);}
+    .memo-textarea::placeholder{color:var(--text3);}
   </style>
 </head>
 <body>
@@ -754,6 +766,16 @@
         <textarea class="q-textarea" id="cardText" placeholder="ここに文章を入力..."></textarea>
         <button class="btn-copy" id="btnCopy" title="コピー"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
       </div>
+      <div class="memo-accordion">
+        <div class="memo-toggle" id="memoToggle">
+          <span class="memo-toggle-icon">▶</span>
+          <span class="memo-toggle-label">メモ</span>
+          <span class="memo-toggle-preview" id="memoPreview">クリックして開く</span>
+        </div>
+        <div class="memo-body" id="memoBody">
+          <textarea class="memo-textarea" id="memoText" placeholder="作戦メモ、使うエピソード、修正点など自由に..."></textarea>
+        </div>
+      </div>
       <div class="q-footer">
         <div class="counter-display">
           <span class="counter-current" id="cardCurrent">0</span>
@@ -858,7 +880,31 @@
     ta.value=d?d.text||'':'';
     ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight)+'px';
     updateCounter(card,q);
+    // memo
+    const memoText=card.querySelector('#memoText');
+    const memoToggle=card.querySelector('#memoToggle');
+    const memoBody=card.querySelector('#memoBody');
+    const memoPreview=card.querySelector('#memoPreview');
+    const activeDraft=activeDraftForQ(q);
+    memoText.value=activeDraft?activeDraft.memo||'':'';
+    updateMemoPreview(memoPreview, memoText.value);
+    memoToggle.addEventListener('click',()=>{
+      const isOpen=memoBody.classList.toggle('open');
+      memoToggle.classList.toggle('open',isOpen);
+      if(isOpen) setTimeout(()=>memoText.focus(),50);
+    });
+    memoText.addEventListener('input',()=>{
+      const d=activeDraftForQ(q);if(!d) return;
+      d.memo=memoText.value;
+      updateMemoPreview(memoPreview,memoText.value);
+      scheduleSave();
+    });
   }
+  function updateMemoPreview(el,text){
+    el.textContent=text?text.replace(/
+/g,' '):'クリックして開く';
+  }
+
 
   function updateCounter(card,q){
     const d=activeDraftForQ(q);
