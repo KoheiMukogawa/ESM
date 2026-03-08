@@ -777,8 +777,9 @@
       const q=activeQuestion(); if(!q) return;
       const d=activeDraftForQ(q);
       const label=(q.label||'').trim();
+      const limitStr=q.limit?`（${q.limit}字）`:'';
       const text=(d?d.text||'':'').trim();
-      const combined=label+'\n\n'+text;
+      const combined=label+limitStr+'\n\n'+text;
       navigator.clipboard.writeText(combined).then(()=>{
         const btn=card.querySelector('#btnCopyQA');
         const orig=btn.innerHTML;
@@ -795,8 +796,9 @@
         const checkedDraft=(q.drafts||[]).find(d=>d.done);
         const d=checkedDraft||activeDraftForQ(q);
         const label=(q.label||`設問${i+1}`).trim();
+        const limitStr=q.limit?`（${q.limit}字）`:'';
         const text=(d?d.text||'':'').trim();
-        return label+'\n\n'+text;
+        return label+limitStr+'\n\n'+text;
       });
       const combined=parts.join('\n\n---\n\n');
       navigator.clipboard.writeText(combined).then(()=>{
