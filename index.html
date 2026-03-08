@@ -128,20 +128,6 @@
     .ctab.drag-over{border-left:2px solid var(--accent);}
     .draft-pill.dragging{opacity:.4;}
     .draft-pill.drag-over{border-left:2px solid var(--accent);}
-    /* status badge */
-    .status-chip{font-size:10px;font-family:'DM Mono',monospace;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;flex-shrink:0;}
-    .status-chip.s0{color:var(--text3);border:1px solid var(--border);}
-    .status-chip.s1{color:#60a5fa;border:1px solid #60a5fa;background:rgba(96,165,250,.08);}
-    .status-chip.s2{color:var(--ok);border:1px solid var(--ok);background:rgba(52,211,153,.08);}
-    .status-chip.s3{color:var(--danger);border:1px solid var(--danger);background:rgba(248,113,113,.08);}
-    /* status selector in info panel */
-    .status-btns{display:flex;gap:5px;flex-wrap:wrap;}
-    .status-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;}
-    .status-btn:hover{border-color:var(--accent);color:var(--accent);}
-    .status-btn.active-s0{border-color:var(--border);color:var(--text2);background:var(--surface);}
-    .status-btn.active-s1{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.1);}
-    .status-btn.active-s2{border-color:var(--ok);color:var(--ok);background:rgba(52,211,153,.1);}
-    .status-btn.active-s3{border-color:var(--danger);color:var(--danger);background:rgba(248,113,113,.1);}
 
     /* ── Main ── */
     .main-content{flex:1;overflow-y:auto;padding:24px;}
@@ -294,15 +280,6 @@
       <div class="info-field">
         <span class="info-field-label">期限</span>
         <input class="info-input" id="infoDeadline" type="date" style="width:140px;flex:none;">
-      </div>
-      <div class="info-field">
-        <span class="info-field-label">状況</span>
-        <div class="status-btns" id="statusBtns">
-          <button class="status-btn" data-s="0">未提出</button>
-          <button class="status-btn" data-s="1">提出済</button>
-          <button class="status-btn" data-s="2">通過</button>
-          <button class="status-btn" data-s="3">不通過</button>
-        </div>
       </div>
     </div>
   </header>
@@ -497,7 +474,6 @@
       if(doc.exists){
         const d=doc.data();
         companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
-        companies.forEach(c=>{if(c.status===undefined) c.status=0;});
         companies.forEach(c=>(c.questions||[]).forEach(q=>{
           if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
           if(q.done===undefined) q.done=false;
@@ -584,13 +560,6 @@
           tab.appendChild(badge);
         }
       }
-      // status chip
-      const sc=document.createElement('span');
-      const si=c.status||0;
-      sc.className=`status-chip s${si}`;
-      sc.textContent=['未提出','提出済','通過','不通過'][si];
-      tab.appendChild(sc);
-
       const gear=document.createElement('span');
       gear.className='ctab-settings';gear.textContent='⚙';gear.title='企業情報';
       gear.addEventListener('click',e=>{e.stopPropagation();infoPanelOpenId=infoPanelOpenId===c.id?null:c.id;renderInfoPanel();});
@@ -633,20 +602,6 @@
     nUrl.value=c.url||'';nId.value=c.loginId||'';nDl.value=c.deadline||'';
     openBtn.href=c.url||'#';
     nUrl.addEventListener('input',()=>{c.url=nUrl.value.trim();openBtn.href=c.url||'#';scheduleSave();});
-    // status buttons
-    const statusBtns=document.getElementById('statusBtns');
-    statusBtns.querySelectorAll('.status-btn').forEach(btn=>{
-      const s=parseInt(btn.dataset.s);
-      btn.className='status-btn'+(s===(c.status||0)?` active-s${s}`:'');
-      btn.addEventListener('click',()=>{
-        c.status=s;
-        renderCompanyTabs();
-        statusBtns.querySelectorAll('.status-btn').forEach(b=>{
-          b.className='status-btn'+(parseInt(b.dataset.s)===s?` active-s${s}`:'');
-        });
-        scheduleSave();
-      });
-    });
     nId.addEventListener('input',()=>{c.loginId=nId.value;scheduleSave();});
     nDl.addEventListener('change',()=>{c.deadline=nDl.value;renderCompanyTabs();scheduleSave();});
   }
@@ -974,7 +929,7 @@
     const loginId=document.getElementById('newLoginId').value.trim();
     const deadline=document.getElementById('newDeadline').value;
     const id=genId();
-    companies.push({id,name,url,loginId,deadline,status:0,questions:[],activeQId:null});
+    companies.push({id,name,url,loginId,deadline,questions:[],activeQId:null});
     activeCompanyId=id;
     document.getElementById('addCompanyBg').classList.remove('open');
     render();scheduleSave();
