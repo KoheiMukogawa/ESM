@@ -901,8 +901,7 @@
     });
   }
   function updateMemoPreview(el,text){
-    el.textContent=text?text.replace(/
-/g,' '):'クリックして開く';
+    el.textContent=text?text.replace(/\n/g,' '):'クリックして開く';
   }
 
 
