@@ -89,9 +89,9 @@
     .ctab-add:hover{color:var(--accent);}
 
     /* ── Info panel ── */
-    .info-panel{display:none;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);gap:14px;flex-wrap:wrap;align-items:center;}
+    .info-panel{display:none;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);gap:8px 20px;flex-wrap:wrap;align-items:center;}
     .info-panel.open{display:flex;}
-    .info-field{display:flex;align-items:center;gap:8px;flex:1;min-width:180px;}
+    .info-field{display:flex;align-items:center;gap:8px;}
     .info-field-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);font-weight:500;white-space:nowrap;width:48px;flex-shrink:0;}
     .info-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;transition:border-color .15s;}
     .info-input:focus{border-color:var(--accent);}
@@ -280,16 +280,16 @@
     <div class="info-panel" id="infoPanel">
       <div class="info-field">
         <span class="info-field-label">URL</span>
-        <input class="info-input" id="infoUrl" type="url" placeholder="https://mypage.example.com">
+        <input class="info-input" id="infoUrl" type="url" placeholder="https://mypage.example.com" style="width:220px;">
         <a class="btn-open-url" id="btnOpenUrl" href="#" target="_blank" rel="noopener">開く 🔗</a>
       </div>
       <div class="info-field">
         <span class="info-field-label">ID</span>
-        <input class="info-input" id="infoId" type="text" placeholder="ログインID / メールアドレス">
+        <input class="info-input" id="infoId" type="text" placeholder="ログインID" style="width:180px;">
       </div>
       <div class="info-field">
         <span class="info-field-label">期限</span>
-        <input class="info-input" id="infoDeadline" type="date" style="width:140px;flex:none;">
+        <input class="info-input" id="infoDeadline" type="date" style="width:140px;">
       </div>
       <div class="info-field">
         <span class="info-field-label">提出</span>
