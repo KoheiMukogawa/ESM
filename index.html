@@ -572,7 +572,7 @@
       const cls=document.createElement('span');
       cls.className='ctab-close';cls.textContent='×';
       cls.addEventListener('click',e=>{e.stopPropagation();removeCompany(c.id);});
-      tab.appendChild(gear);tab.appendChild(cls);
+      tab.appendChild(cls);
       tab.draggable=true;
       tab.dataset.cid=c.id;
       tab.addEventListener('dragstart',e=>{e.dataTransfer.setData('cid',c.id);tab.classList.add('dragging');});
