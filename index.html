@@ -817,6 +817,7 @@
     // copy all Q&A
     card.querySelector('#btnCopyAll').addEventListener('click',()=>{
       const c=activeCompany(); if(!c) return;
+      const header=(c.name||'').trim();
       const parts=(c.questions||[]).map((q,i)=>{
         // use checked draft if exists, otherwise active draft
         const checkedDraft=(q.drafts||[]).find(d=>d.done);
@@ -826,7 +827,7 @@
         const text=(d?d.text||'':'').trim();
         return label+limitStr+'\n\n'+text;
       });
-      const combined=parts.join('\n\n---\n\n');
+      const combined=(header?header+'\n\n---\n\n':'')+parts.join('\n\n---\n\n');
       navigator.clipboard.writeText(combined).then(()=>{
         const btn=card.querySelector('#btnCopyAll');
         const orig=btn.innerHTML;
