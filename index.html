@@ -88,15 +88,17 @@
 
 
     /* ── Sidebar info ── */
-    .sidebar-info{border-top:1px solid var(--border);padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
+    .sidebar-info{border-top:1px solid var(--border);padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
     .sinfo-row{display:flex;align-items:center;gap:8px;}
     .sinfo-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;width:34px;flex-shrink:0;}
-    .sinfo-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:11px;outline:none;transition:border-color .15s;min-width:0;}
-    .sinfo-input:focus{border-color:var(--accent);}
-    .sinfo-input::placeholder{color:var(--text3);}
-    .btn-open-url-sm{font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;flex-shrink:0;}
+    .sinfo-value{font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .sinfo-value.empty{color:var(--text3);font-style:italic;}
+    .btn-open-url-sm{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex:1;}
     .btn-open-url-sm:hover{background:rgba(108,143,255,.1);}
-    .btn-submit-sm{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--ok);background:transparent;color:var(--ok);cursor:pointer;transition:all .15s;white-space:nowrap;width:100%;}
+    .sinfo-actions{display:flex;gap:6px;margin-top:4px;}
+    .btn-edit-sm{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;flex:1;}
+    .btn-edit-sm:hover{border-color:var(--accent);color:var(--accent);}
+    .btn-submit-sm{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--ok);background:transparent;color:var(--ok);cursor:pointer;transition:all .15s;flex:1;}
     .btn-submit-sm:hover{background:rgba(52,211,153,.1);}
     .btn-submit-sm.active{background:rgba(52,211,153,.12);font-weight:600;}
     /* ── Body ── */
@@ -601,28 +603,43 @@
     const c=activeCompany();
     if(!c){el.style.display='none';return;}
     el.style.display='flex';
+    const fmtDate=dl=>{if(!dl) return null;const d=new Date(dl);return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;};
     el.innerHTML=`
       <div class="sinfo-row">
         <span class="sinfo-label">URL</span>
-        <input class="sinfo-input" id="sUrl" type="url" placeholder="https://..." value="${(c.url||'').replace(/"/g,'&quot;')}">
-        <a class="btn-open-url-sm" id="sBtnUrl" href="${c.url||'#'}" target="_blank" rel="noopener">開く</a>
+        ${c.url
+          ? `<a class="btn-open-url-sm" href="${c.url}" target="_blank" rel="noopener">🔗 マイページを開く</a>`
+          : `<span class="sinfo-value empty">未設定</span>`}
       </div>
       <div class="sinfo-row">
         <span class="sinfo-label">ID</span>
-        <input class="sinfo-input" id="sId" type="text" placeholder="ログインID" value="${(c.loginId||'').replace(/"/g,'&quot;')}">
+        <span class="sinfo-value ${c.loginId?'':'empty'}">${c.loginId||'未設定'}</span>
       </div>
       <div class="sinfo-row">
         <span class="sinfo-label">期限</span>
-        <input class="sinfo-input" id="sDl" type="date" value="${c.deadline||''}" style="flex:none;width:130px;">
+        <span class="sinfo-value ${c.deadline?'':'empty'}">${fmtDate(c.deadline)||'未設定'}</span>
       </div>
-      <button class="btn-submit-sm ${c.submitted?'active':''}" id="sBtnSubmit">${c.submitted?'提出済み ✓ (取り消す)':'提出済みにする'}</button>
+      <div class="sinfo-actions">
+        <button class="btn-edit-sm" id="sBtnEdit">✏ 編集</button>
+        <button class="btn-submit-sm ${c.submitted?'active':''}" id="sBtnSubmit">${c.submitted?'提出済み ✓':'提出済みにする'}</button>
+      </div>
     `;
-    document.getElementById('sUrl').addEventListener('input',e=>{c.url=e.target.value.trim();document.getElementById('sBtnUrl').href=c.url||'#';scheduleSave();});
-    document.getElementById('sId').addEventListener('input',e=>{c.loginId=e.target.value;scheduleSave();});
-    document.getElementById('sDl').addEventListener('change',e=>{c.deadline=e.target.value;renderCompanyTabs();scheduleSave();});
+    document.getElementById('sBtnEdit').addEventListener('click',()=>openEditCompanyModal(c));
     document.getElementById('sBtnSubmit').addEventListener('click',()=>{
       c.submitted=!c.submitted;renderCompanyTabs();renderSidebarInfo();scheduleSave();
     });
+  }
+
+  function openEditCompanyModal(c){
+    document.getElementById('newName').value=c.name||'';
+    document.getElementById('newUrl').value=c.url||'';
+    document.getElementById('newLoginId').value=c.loginId||'';
+    document.getElementById('newDeadline').value=c.deadline||'';
+    document.getElementById('addCompanyModal').querySelector('h2').textContent='✏ 企業情報を編集';
+    document.getElementById('addCompanyConfirm').textContent='保存する';
+    document.getElementById('addCompanyBg').classList.add('open');
+    document.getElementById('addCompanyBg').dataset.editId=c.id;
+    setTimeout(()=>document.getElementById('newName').focus(),50);
   }
 
   // ── Sidebar ──
@@ -991,13 +1008,30 @@
     const url=document.getElementById('newUrl').value.trim();
     const loginId=document.getElementById('newLoginId').value.trim();
     const deadline=document.getElementById('newDeadline').value;
-    const id=genId();
-    companies.push({id,name,url,loginId,deadline,submitted:false,questions:[],activeQId:null});
-    activeCompanyId=id;
-    document.getElementById('addCompanyBg').classList.remove('open');
+    const bg=document.getElementById('addCompanyBg');
+    const editId=bg.dataset.editId;
+    if(editId){
+      const c=companies.find(x=>x.id===editId);
+      if(c){c.name=name;c.url=url;c.loginId=loginId;c.deadline=deadline;}
+      delete bg.dataset.editId;
+    } else {
+      const id=genId();
+      companies.push({id,name,url,loginId,deadline,submitted:false,questions:[],activeQId:null});
+      activeCompanyId=id;
+    }
+    // reset modal title
+    document.getElementById('addCompanyModal').querySelector('h2').textContent='🏢 企業を追加';
+    document.getElementById('addCompanyConfirm').textContent='追加する';
+    bg.classList.remove('open');
     render();scheduleSave();
   }
-  function closeAddCompanyModal(){document.getElementById('addCompanyBg').classList.remove('open');}
+  function closeAddCompanyModal(){
+    const bg=document.getElementById('addCompanyBg');
+    bg.classList.remove('open');
+    delete bg.dataset.editId;
+    document.getElementById('addCompanyModal').querySelector('h2').textContent='🏢 企業を追加';
+    document.getElementById('addCompanyConfirm').textContent='追加する';
+  }
 
   function removeCompany(id){
     if(!confirm('この企業と設問をすべて削除しますか？')) return;
