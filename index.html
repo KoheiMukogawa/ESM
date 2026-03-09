@@ -71,6 +71,12 @@
     .ctab-deadline.warn{color:var(--warn);border-color:var(--warn);background:rgba(251,191,36,.08);}
     .ctab-deadline.danger{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.08);}
     .ctab-done-badge{font-size:11px;color:var(--ok);flex-shrink:0;}
+    .ctab-submitted-badge{font-size:10px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;border:1px solid var(--ok);color:var(--ok);background:rgba(52,211,153,.08);flex-shrink:0;}
+    .ctab.submitted .ctab-name{color:var(--text3);}
+    .ctab.submitted{opacity:.7;}
+    .btn-submit{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--ok);background:transparent;color:var(--ok);cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .btn-submit:hover{background:rgba(52,211,153,.1);}
+    .btn-submit.active{background:rgba(52,211,153,.15);font-weight:600;}
     .ctab.all-done .ctab-name{color:var(--ok);}
     .ctab.all-done{border-bottom-color:var(--ok)!important;}
     .ctab-settings{font-size:11px;opacity:0;transition:opacity .15s;cursor:pointer;color:var(--text3);flex-shrink:0;}
@@ -285,6 +291,10 @@
         <span class="info-field-label">期限</span>
         <input class="info-input" id="infoDeadline" type="date" style="width:140px;flex:none;">
       </div>
+      <div class="info-field">
+        <span class="info-field-label">提出</span>
+        <button class="btn-submit" id="btnSubmit">提出済みにする</button>
+      </div>
     </div>
   </header>
 
@@ -438,10 +448,9 @@
   function getState(count,limit){
     if(!limit) return 'none';
     const p=count/limit;
-    if(p>1)   return 'danger';   // 超過 → 赤
+    if(p>1)    return 'danger';  // 超過 → 赤
     if(p>=.95) return 'ok';      // 95%以上 → 緑
-    if(p>=.8) return 'warn';     // 80%以上 → 黄
-    return 'none';               // それ以下 → 無色
+    return 'none';
   }
   const activeCompany=()=>companies.find(c=>c.id===activeCompanyId);
   const activeQuestion=()=>{const c=activeCompany();return c?(c.questions||[]).find(q=>q.id===c.activeQId):null;};
@@ -541,11 +550,18 @@
     const bar=document.getElementById('companyTabs');
     bar.querySelectorAll('.ctab').forEach(t=>t.remove());
     const add=document.getElementById('companyAdd');
-    companies.forEach(c=>{
+    // sort: active/normal first, then submitted/expired
+    const today=new Date(); today.setHours(0,0,0,0);
+    const sorted=[...companies].sort((a,b)=>{
+      const aEnd=a.submitted||!!(a.deadline&&new Date(a.deadline)<today);
+      const bEnd=b.submitted||!!(b.deadline&&new Date(b.deadline)<today);
+      if(aEnd===bEnd) return companies.indexOf(a)-companies.indexOf(b);
+      return aEnd?1:-1;
+    });
+    sorted.forEach(c=>{
       const tab=document.createElement('div');
-      const qs=c.questions||[];
-      const allDone=qs.length>0&&qs.every(q=>(q.drafts||[]).some(d=>d.done));
-      tab.className='ctab'+(c.id===activeCompanyId?' active':'')+(allDone?' all-done':'');
+      const isExpired=c.deadline&&new Date(c.deadline)<today&&!c.submitted;
+      tab.className='ctab'+(c.id===activeCompanyId?' active':'')+(c.submitted?' submitted':'');
 
       const nameEl=document.createElement('span');
       nameEl.className='ctab-name';
@@ -556,9 +572,9 @@
       nameEl.addEventListener('click',e=>{if(c.id===activeCompanyId) e.stopPropagation();});
       tab.appendChild(nameEl);
 
-      if(allDone){
+      if(c.submitted){
         const db=document.createElement('span');
-        db.className='ctab-done-badge';db.textContent='✓';
+        db.className='ctab-submitted-badge';db.textContent='提出済';
         tab.appendChild(db);
       }
       if(c.deadline){
@@ -614,6 +630,16 @@
     nUrl.addEventListener('input',()=>{c.url=nUrl.value.trim();openBtn.href=c.url||'#';scheduleSave();});
     nId.addEventListener('input',()=>{c.loginId=nId.value;scheduleSave();});
     nDl.addEventListener('change',()=>{c.deadline=nDl.value;renderCompanyTabs();scheduleSave();});
+    // submit button
+    const btnSubmit=document.getElementById('btnSubmit');
+    btnSubmit.textContent=c.submitted?'提出済みを取り消す':'提出済みにする';
+    btnSubmit.className='btn-submit'+(c.submitted?' active':'');
+    btnSubmit.addEventListener('click',()=>{
+      c.submitted=!c.submitted;
+      btnSubmit.textContent=c.submitted?'提出済みを取り消す':'提出済みにする';
+      btnSubmit.className='btn-submit'+(c.submitted?' active':'');
+      renderCompanyTabs();scheduleSave();
+    });
   }
 
   // ── Sidebar ──
@@ -983,7 +1009,7 @@
     const loginId=document.getElementById('newLoginId').value.trim();
     const deadline=document.getElementById('newDeadline').value;
     const id=genId();
-    companies.push({id,name,url,loginId,deadline,questions:[],activeQId:null});
+    companies.push({id,name,url,loginId,deadline,submitted:false,questions:[],activeQId:null});
     activeCompanyId=id;
     document.getElementById('addCompanyBg').classList.remove('open');
     render();scheduleSave();
