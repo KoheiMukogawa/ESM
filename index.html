@@ -577,7 +577,7 @@
         db.className='ctab-submitted-badge';db.textContent='提出済';
         tab.appendChild(db);
       }
-      if(c.deadline){
+      if(c.deadline&&!c.submitted){
         const dl=deadlineState(c.deadline);
         if(dl.label){
           const badge=document.createElement('span');
