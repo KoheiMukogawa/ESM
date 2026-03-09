@@ -74,14 +74,10 @@
     .ctab-submitted-badge{font-size:10px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;border:1px solid var(--ok);color:var(--ok);background:rgba(52,211,153,.08);flex-shrink:0;}
     .ctab.submitted .ctab-name{color:var(--text3);}
     .ctab.submitted{opacity:.7;}
-    .btn-submit{font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--ok);background:transparent;color:var(--ok);cursor:pointer;transition:all .15s;white-space:nowrap;}
-    .btn-submit:hover{background:rgba(52,211,153,.1);}
-    .btn-submit.active{background:rgba(52,211,153,.15);font-weight:600;}
+
     .ctab.all-done .ctab-name{color:var(--ok);}
     .ctab.all-done{border-bottom-color:var(--ok)!important;}
-    .ctab-settings{font-size:11px;opacity:0;transition:opacity .15s;cursor:pointer;color:var(--text3);flex-shrink:0;}
-    .ctab:hover .ctab-settings,.ctab.active .ctab-settings{opacity:.6;}
-    .ctab-settings:hover{color:var(--accent)!important;opacity:1!important;}
+
     .ctab-close{opacity:0;color:var(--text3);font-size:13px;transition:opacity .15s;flex-shrink:0;}
     .ctab:hover .ctab-close{opacity:1;}
     .ctab-close:hover{color:var(--danger);}
@@ -89,16 +85,20 @@
     .ctab-add:hover{color:var(--accent);}
 
     /* ── Info panel ── */
-    .info-panel{display:none;padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);gap:8px 20px;flex-wrap:wrap;align-items:center;}
-    .info-panel.open{display:flex;}
-    .info-field{display:flex;align-items:center;gap:8px;}
-    .info-field-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);font-weight:500;white-space:nowrap;width:48px;flex-shrink:0;}
-    .info-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;transition:border-color .15s;}
-    .info-input:focus{border-color:var(--accent);}
-    .info-input::placeholder{color:var(--text3);}
-    .btn-open-url{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
-    .btn-open-url:hover{background:rgba(108,143,255,.1);}
 
+
+    /* ── Sidebar info ── */
+    .sidebar-info{border-top:1px solid var(--border);padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
+    .sinfo-row{display:flex;align-items:center;gap:8px;}
+    .sinfo-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;width:34px;flex-shrink:0;}
+    .sinfo-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:11px;outline:none;transition:border-color .15s;min-width:0;}
+    .sinfo-input:focus{border-color:var(--accent);}
+    .sinfo-input::placeholder{color:var(--text3);}
+    .btn-open-url-sm{font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;flex-shrink:0;}
+    .btn-open-url-sm:hover{background:rgba(108,143,255,.1);}
+    .btn-submit-sm{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--ok);background:transparent;color:var(--ok);cursor:pointer;transition:all .15s;white-space:nowrap;width:100%;}
+    .btn-submit-sm:hover{background:rgba(52,211,153,.1);}
+    .btn-submit-sm.active{background:rgba(52,211,153,.12);font-weight:600;}
     /* ── Body ── */
     .app-body{display:flex;flex:1;overflow:hidden;}
 
@@ -277,25 +277,7 @@
     <div class="company-tabs" id="companyTabs">
       <div class="ctab-add" id="companyAdd" title="企業を追加">＋</div>
     </div>
-    <div class="info-panel" id="infoPanel">
-      <div class="info-field">
-        <span class="info-field-label">URL</span>
-        <input class="info-input" id="infoUrl" type="url" placeholder="https://mypage.example.com" style="width:220px;">
-        <a class="btn-open-url" id="btnOpenUrl" href="#" target="_blank" rel="noopener">開く 🔗</a>
-      </div>
-      <div class="info-field">
-        <span class="info-field-label">ID</span>
-        <input class="info-input" id="infoId" type="text" placeholder="ログインID" style="width:180px;">
-      </div>
-      <div class="info-field">
-        <span class="info-field-label">期限</span>
-        <input class="info-input" id="infoDeadline" type="date" style="width:140px;">
-      </div>
-      <div class="info-field">
-        <span class="info-field-label">提出</span>
-        <button class="btn-submit" id="btnSubmit">提出済みにする</button>
-      </div>
-    </div>
+
   </header>
 
   <div class="app-body">
@@ -305,6 +287,7 @@
         <span class="sidebar-add" id="questionAdd" title="設問を追加">＋</span>
       </div>
       <div class="sidebar-list" id="sidebarList"></div>
+      <div class="sidebar-info" id="sidebarInfo" style="display:none;"></div>
     </div>
     <div class="main-content" id="mainContent">
       <div class="empty-state" id="emptyState">
@@ -440,7 +423,7 @@
   });
   const auth=firebase.auth(), db=firebase.firestore();
 
-  let companies=[], activeCompanyId=null, infoPanelOpenId=null;
+  let companies=[], activeCompanyId=null;
   let theme='dark', currentUser=null, saveTimer=null;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
@@ -586,9 +569,6 @@
           tab.appendChild(badge);
         }
       }
-      const gear=document.createElement('span');
-      gear.className='ctab-settings';gear.textContent='⚙';gear.title='企業情報';
-      gear.addEventListener('click',e=>{e.stopPropagation();infoPanelOpenId=infoPanelOpenId===c.id?null:c.id;renderInfoPanel();});
       const cls=document.createElement('span');
       cls.className='ctab-close';cls.textContent='×';
       cls.addEventListener('click',e=>{e.stopPropagation();removeCompany(c.id);});
@@ -609,36 +589,39 @@
         const [moved]=companies.splice(fi,1);companies.splice(ti,0,moved);
         renderCompanyTabs();scheduleSave();
       });
-      tab.addEventListener('click',()=>{if(activeCompanyId!==c.id){activeCompanyId=c.id;infoPanelOpenId=null;render();scheduleSave();}});
+      tab.addEventListener('click',()=>{if(activeCompanyId!==c.id){activeCompanyId=c.id;render();scheduleSave();}});
       bar.insertBefore(tab,add);
     });
   }
 
-  // ── Info panel ──
-  function renderInfoPanel(){
-    const panel=document.getElementById('infoPanel');
-    const c=companies.find(x=>x.id===infoPanelOpenId);
-    if(!c){panel.classList.remove('open');return;}
-    panel.classList.add('open');
-    ['infoUrl','infoId','infoDeadline'].forEach(id=>{const el=document.getElementById(id);const n=el.cloneNode(true);el.parentNode.replaceChild(n,el);});
-    const nUrl=document.getElementById('infoUrl');
-    const nId=document.getElementById('infoId');
-    const nDl=document.getElementById('infoDeadline');
-    const openBtn=document.getElementById('btnOpenUrl');
-    nUrl.value=c.url||'';nId.value=c.loginId||'';nDl.value=c.deadline||'';
-    openBtn.href=c.url||'#';
-    nUrl.addEventListener('input',()=>{c.url=nUrl.value.trim();openBtn.href=c.url||'#';scheduleSave();});
-    nId.addEventListener('input',()=>{c.loginId=nId.value;scheduleSave();});
-    nDl.addEventListener('change',()=>{c.deadline=nDl.value;renderCompanyTabs();scheduleSave();});
-    // submit button
-    const btnSubmit=document.getElementById('btnSubmit');
-    btnSubmit.textContent=c.submitted?'提出済みを取り消す':'提出済みにする';
-    btnSubmit.className='btn-submit'+(c.submitted?' active':'');
-    btnSubmit.addEventListener('click',()=>{
-      c.submitted=!c.submitted;
-      btnSubmit.textContent=c.submitted?'提出済みを取り消す':'提出済みにする';
-      btnSubmit.className='btn-submit'+(c.submitted?' active':'');
-      renderCompanyTabs();scheduleSave();
+  // ── Sidebar Info ──
+  function renderInfoPanel(){renderSidebarInfo();}
+  function renderSidebarInfo(){
+    const el=document.getElementById('sidebarInfo');
+    const c=activeCompany();
+    if(!c){el.style.display='none';return;}
+    el.style.display='flex';
+    el.innerHTML=`
+      <div class="sinfo-row">
+        <span class="sinfo-label">URL</span>
+        <input class="sinfo-input" id="sUrl" type="url" placeholder="https://..." value="${(c.url||'').replace(/"/g,'&quot;')}">
+        <a class="btn-open-url-sm" id="sBtnUrl" href="${c.url||'#'}" target="_blank" rel="noopener">開く</a>
+      </div>
+      <div class="sinfo-row">
+        <span class="sinfo-label">ID</span>
+        <input class="sinfo-input" id="sId" type="text" placeholder="ログインID" value="${(c.loginId||'').replace(/"/g,'&quot;')}">
+      </div>
+      <div class="sinfo-row">
+        <span class="sinfo-label">期限</span>
+        <input class="sinfo-input" id="sDl" type="date" value="${c.deadline||''}" style="flex:none;width:130px;">
+      </div>
+      <button class="btn-submit-sm ${c.submitted?'active':''}" id="sBtnSubmit">${c.submitted?'提出済み ✓ (取り消す)':'提出済みにする'}</button>
+    `;
+    document.getElementById('sUrl').addEventListener('input',e=>{c.url=e.target.value.trim();document.getElementById('sBtnUrl').href=c.url||'#';scheduleSave();});
+    document.getElementById('sId').addEventListener('input',e=>{c.loginId=e.target.value;scheduleSave();});
+    document.getElementById('sDl').addEventListener('change',e=>{c.deadline=e.target.value;renderCompanyTabs();scheduleSave();});
+    document.getElementById('sBtnSubmit').addEventListener('click',()=>{
+      c.submitted=!c.submitted;renderCompanyTabs();renderSidebarInfo();scheduleSave();
     });
   }
 
