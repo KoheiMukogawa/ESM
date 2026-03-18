@@ -241,7 +241,7 @@
     .memo-toggle-preview{flex:1;font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .memo-body{display:none;padding:0;}
     .memo-body.open{display:block;}
-    .memo-textarea{display:block;width:100%;background:var(--surface2);border:none;outline:none;resize:none;padding:12px 22px;color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;min-height:80px;border-top:1px solid var(--border);}
+    .memo-textarea{display:block;width:100%;background:var(--surface2);border:none;outline:none;resize:none;padding:12px 22px;color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;min-height:80px;border-top:1px solid var(--border);overflow:hidden;box-sizing:border-box;}
     .memo-textarea::placeholder{color:var(--text3);}
   </style>
 </head>
@@ -923,17 +923,19 @@
     const memoBody=card.querySelector('#memoBody');
     const memoPreview=card.querySelector('#memoPreview');
     const activeDraft=activeDraftForQ(q);
+    function autoResizeMemo(){memoText.style.height='auto';memoText.style.height=memoText.scrollHeight+'px';}
     memoText.value=activeDraft?activeDraft.memo||'':'';
     updateMemoPreview(memoPreview, memoText.value);
     memoToggle.addEventListener('click',()=>{
       const isOpen=memoBody.classList.toggle('open');
       memoToggle.classList.toggle('open',isOpen);
-      if(isOpen) setTimeout(()=>memoText.focus(),50);
+      if(isOpen) setTimeout(()=>{memoText.focus();autoResizeMemo();},50);
     });
     memoText.addEventListener('input',()=>{
       const d=activeDraftForQ(q);if(!d) return;
       d.memo=memoText.value;
       updateMemoPreview(memoPreview,memoText.value);
+      autoResizeMemo();
       scheduleSave();
     });
   }
