@@ -59,6 +59,18 @@
     .btn-help:hover{border-color:var(--accent);color:var(--accent);}
     .btn-logout{font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;transition:all .15s;}
     .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+    .zoom-btn{font-size:11px;font-weight:700;padding:4px 8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;letter-spacing:0;}
+    .zoom-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .zoom-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(108,143,255,.1);}
+
+    /* ── Zoom mode (writing area only) ── */
+    [data-zoom="on"] .q-textarea{font-size:20px;line-height:2;}
+    [data-zoom="on"] .q-title-input{font-size:19px;}
+    [data-zoom="on"] .q-limit-wrap{font-size:15px;}
+    [data-zoom="on"] .q-limit-input{font-size:15px;}
+    [data-zoom="on"] .counter-current{font-size:40px;}
+    [data-zoom="on"] .counter-sep,[data-zoom="on"] .counter-limit{font-size:18px;}
+    [data-zoom="on"] .counter-unit{font-size:13px;}
 
     /* ── Company tabs ── */
     .company-tabs{display:flex;align-items:center;gap:2px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
@@ -266,6 +278,7 @@
     <div class="header-top">
       <span style="font-size:13px;font-weight:700;letter-spacing:.03em;"><span style="color:#2563EB;">ES</span><span style="color:var(--text3);"> </span><span style="color:#2563EB;">M</span><span style="color:var(--text3);">anager</span></span>
       <div class="header-right">
+        <button class="zoom-btn" id="zoomToggle" title="文字サイズ拡大">A+</button>
         <span class="theme-icon" id="themeIcon">🌙</span>
         <button class="theme-toggle" id="themeToggle" title="テーマ切り替え"></button>
         <div class="sync-status">
@@ -449,6 +462,17 @@
     document.getElementById('themeIcon').textContent=t==='dark'?'🌙':'☀️';
   }
   document.getElementById('themeToggle').addEventListener('click',()=>{applyTheme(theme==='dark'?'light':'dark');scheduleSave();});
+
+  // ── Zoom (writing area only) ──
+  let zoomOn=localStorage.getItem('zoom')==='on';
+  function applyZoom(on){
+    zoomOn=on;
+    document.getElementById('appScreen').dataset.zoom=on?'on':'off';
+    document.getElementById('zoomToggle').classList.toggle('active',on);
+    localStorage.setItem('zoom',on?'on':'off');
+  }
+  applyZoom(zoomOn);
+  document.getElementById('zoomToggle').addEventListener('click',()=>applyZoom(!zoomOn));
 
   // ── Sync ──
   function setSyncStatus(s){
