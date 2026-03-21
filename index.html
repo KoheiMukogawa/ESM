@@ -170,7 +170,7 @@
     .draft-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0;}
     .btn-draft{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;}
     .btn-draft:hover{border-color:var(--accent);color:var(--accent);}
-    .q-textarea{display:block;width:100%;background:transparent;border:none;outline:none;resize:none;padding:18px 22px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;line-height:1.9;min-height:220px;}
+    .q-textarea{display:block;width:100%;background:transparent;border:none;outline:none;resize:none;padding:18px 22px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:calc(14px * var(--textarea-zoom,1));line-height:1.9;min-height:220px;}
     .q-textarea::placeholder{color:var(--text3);}
     .q-footer{padding:12px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
     .counter-display{display:flex;align-items:baseline;gap:4px;}
@@ -462,8 +462,7 @@
   let cardZoom=parseFloat(localStorage.getItem('cardZoom')||'1');
   function applyCardZoom(z){
     cardZoom=Math.min(2,Math.max(0.5,Math.round(z*10)/10));
-    const card=document.querySelector('.question-card');
-    if(card) card.style.zoom=cardZoom;
+    document.documentElement.style.setProperty('--textarea-zoom',cardZoom);
     document.getElementById('zoomPct').textContent=Math.round(cardZoom*100)+'%';
     localStorage.setItem('cardZoom',cardZoom);
   }
