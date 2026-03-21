@@ -45,10 +45,11 @@
     .header-top{padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
     .header-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text3);font-weight:700;}
     .header-right{display:flex;align-items:center;gap:10px;}
-    .theme-toggle{width:36px;height:20px;background:var(--border);border-radius:10px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;border:none;}
-    .theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--text2);transition:transform .2s,background .2s;}
-    [data-theme="light"] .theme-toggle::after{transform:translateX(16px);background:var(--accent);}
-    .theme-icon{font-size:12px;}
+    .theme-toggle{width:62px;height:28px;background:#23232e;border-radius:14px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:space-between;padding:0 7px;border:1px solid var(--border);flex-shrink:0;transition:background .3s,border-color .3s;}
+    [data-theme="light"] .theme-toggle{background:#e8e8f0;}
+    .theme-toggle .t-icon{font-size:13px;line-height:1;z-index:1;pointer-events:none;transition:opacity .2s;}
+    .theme-toggle .t-knob{position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);transition:transform .3s cubic-bezier(.4,0,.2,1);left:4px;transform:translateX(34px);}
+    [data-theme="light"] .theme-toggle .t-knob{transform:translateX(0);background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15);}
     .sync-status{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:5px;}
     .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:background .3s;}
     .sync-dot.syncing{background:var(--warn);animation:pulse 1s infinite;}
@@ -270,13 +271,16 @@
     <div class="header-top">
       <span style="font-size:13px;font-weight:700;letter-spacing:.03em;"><span style="color:#2563EB;">ES</span><span style="color:var(--text3);"> </span><span style="color:#2563EB;">M</span><span style="color:var(--text3);">anager</span></span>
       <div class="header-right">
-        <span class="theme-icon" id="themeIcon">🌙</span>
         <div class="zoom-ctrl" id="zoomCtrl">
           <button class="btn-zoom" id="btnZoomMinus">ー</button>
           <span class="zoom-pct" id="zoomPct">100%</span>
           <button class="btn-zoom" id="btnZoomPlus">＋</button>
         </div>
-        <button class="theme-toggle" id="themeToggle" title="テーマ切り替え"></button>
+        <button class="theme-toggle" id="themeToggle" title="テーマ切り替え">
+          <span class="t-icon">☀️</span>
+          <span class="t-knob"></span>
+          <span class="t-icon">🌙</span>
+        </button>
         <div class="sync-status">
           <div class="sync-dot" id="syncDot"></div>
           <span id="syncLabel">--</span>
@@ -455,7 +459,6 @@
   function applyTheme(t){
     theme=t;
     document.documentElement.setAttribute('data-theme',t);
-    document.getElementById('themeIcon').textContent=t==='dark'?'🌙':'☀️';
   }
   document.getElementById('themeToggle').addEventListener('click',()=>{applyTheme(theme==='dark'?'light':'dark');scheduleSave();});
   // ── Writing area zoom ──
