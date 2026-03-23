@@ -19,11 +19,16 @@ jobs:
           BRANCH="${{ github.ref_name }}"
           REPO="${{ github.repository }}"
 
-          # 既存のPRがあればスキップ（エラーは無視）
-          gh pr create \
-            --repo "$REPO" \
-            --base main \
-            --head "$BRANCH" \
-            --title "$BRANCH" \
-            --body "Automated PR from branch \`$BRANCH\`" \
-          || echo "PR already exists or creation skipped"
+          # 既存のオープンPRを確認
+          EXISTING=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Open PR #$EXISTING already exists for $BRANCH, skipping."
+          else
+            gh pr create \
+              --repo "$REPO" \
+              --base main \
+              --head "$BRANCH" \
+              --title "$BRANCH" \
+              --body "Automated PR from branch \`$BRANCH\`"
+          fi
