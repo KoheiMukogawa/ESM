@@ -70,6 +70,17 @@
     .sync-dot.syncing{background:var(--warn);animation:pulse 1s infinite;}
     .sync-dot.synced{background:var(--ok);}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    /* ── Restore banner ── */
+    #restoreBanner{display:none;align-items:center;gap:10px;padding:8px 20px;background:rgba(251,191,36,.12);border-bottom:1px solid var(--warn);font-size:12px;color:var(--warn);flex-shrink:0;}
+    #restoreBanner strong{color:var(--warn);}
+    .btn-restore{padding:4px 12px;background:var(--warn);color:#000;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+    .btn-restore:hover{opacity:.85;}
+    .btn-restore-dismiss{padding:4px 10px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s;margin-left:auto;}
+    .btn-restore-dismiss:hover{color:var(--text2);}
+    /* ── Remote update toast ── */
+    #remoteToast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--text2);box-shadow:var(--shadow);display:none;align-items:center;gap:8px;z-index:9999;transition:opacity .3s;}
+    #remoteToast.show{display:flex;}
+    #remoteToast .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0;}
     .user-menu{position:relative;display:flex;align-items:center;}
     .user-avatar{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);object-fit:cover;cursor:pointer;transition:opacity .15s;display:block;}
     .user-avatar:hover{opacity:.8;}
@@ -287,8 +298,17 @@
   </div>
 </div>
 
+<!-- ── Remote update toast ── -->
+<div id="remoteToast"><span class="toast-dot"></span>他のデバイスからデータが更新されました</div>
+
 <!-- ── App ── -->
 <div id="appScreen">
+  <!-- ── Restore banner (shown when cloud is empty but local backup exists) ── -->
+  <div id="restoreBanner">
+    <span>⚠️ <strong>クラウドのデータが空です。</strong>ローカルバックアップから復元できます（<span id="restoreBackupDate"></span>保存分）</span>
+    <button class="btn-restore" id="btnRestoreConfirm">復元する</button>
+    <button class="btn-restore-dismiss" id="btnRestoreDismiss">無視する</button>
+  </div>
   <header>
     <div class="header-top">
       <span style="font-size:13px;font-weight:700;letter-spacing:.03em;"><span style="color:#2563EB;">ES</span><span style="color:var(--text3);"> </span><span style="color:#2563EB;">M</span><span style="color:var(--text3);">anager</span></span>
@@ -476,6 +496,7 @@
 
   let companies=[], activeCompanyId=null;
   let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
+  let unsubscribeSnapshot=null;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
   const countChars=t=>(t||'').replace(/\n/g,'').length;
@@ -520,31 +541,99 @@
   function scheduleSave(){setSyncStatus('syncing');clearTimeout(saveTimer);saveTimer=setTimeout(saveToCloud,1500);}
   async function saveToCloud(){
     if(!currentUser) return;
+    saveTimer=null;
     try{
       await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       setSyncStatus('synced');
-    }catch(e){console.error(e);}
+      saveLocalBackup();
+    }catch(e){console.error(e);setSyncStatus(null);}
   }
-  async function loadFromCloud(){
+
+  // ── Layer 2: localStorage backup (up to 5 generations) ──
+  function saveLocalBackup(){
     if(!currentUser) return;
     try{
-      const doc=await db.collection('users').doc(currentUser.uid).get();
-      dataLoaded=true;
-      if(doc.exists){
-        const d=doc.data();
-        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
-        companies.forEach(c=>(c.questions||[]).forEach(q=>{
-          if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
-          // migrate: move q.done to active draft
-          q.drafts.forEach(d=>{ if(d.done===undefined) d.done=false; });
-          if(q.done){
-            const ad=q.drafts.find(d=>d.id===q.activeDraftId);
-            if(ad) ad.done=true;
-          }
-          delete q.done;
-        }));
+      const key='esmBackups_'+currentUser.uid;
+      const entry={savedAt:Date.now(),companies:JSON.parse(JSON.stringify(companies)),activeCompanyId,theme};
+      let backups=[];
+      try{backups=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
+      backups.unshift(entry);
+      backups=backups.slice(0,5);
+      localStorage.setItem(key,JSON.stringify(backups));
+    }catch(e){}
+  }
+
+  function getLocalBackups(){
+    if(!currentUser) return [];
+    try{return JSON.parse(localStorage.getItem('esmBackups_'+currentUser.uid)||'[]');}catch(e){return [];}
+  }
+
+  // ── Layer 3: Restore UI ──
+  function offerLocalStorageRestore(){
+    const backups=getLocalBackups();
+    if(!backups.length||!backups[0].companies||!backups[0].companies.length) return;
+    const d=new Date(backups[0].savedAt);
+    const label=`${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('restoreBackupDate').textContent=label;
+    const banner=document.getElementById('restoreBanner');
+    banner.style.display='flex';
+    document.getElementById('btnRestoreConfirm').onclick=()=>{
+      const b=getLocalBackups()[0];
+      companies=b.companies; activeCompanyId=b.activeCompanyId; theme=b.theme||theme;
+      applyTheme(theme);
+      render();
+      scheduleSave();
+      banner.style.display='none';
+    };
+    document.getElementById('btnRestoreDismiss').onclick=()=>{banner.style.display='none';};
+  }
+
+  function showRemoteToast(){
+    const t=document.getElementById('remoteToast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),3000);
+  }
+
+  // ── Layer 1: onSnapshot real-time sync ──
+  function applyCloudData(d){
+    companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
+    companies.forEach(c=>(c.questions||[]).forEach(q=>{
+      if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
+      q.drafts.forEach(d=>{if(d.done===undefined) d.done=false;});
+      if(q.done){const ad=q.drafts.find(d=>d.id===q.activeDraftId);if(ad) ad.done=true;}
+      delete q.done;
+    }));
+  }
+
+  function subscribeToCloud(){
+    if(!currentUser) return;
+    if(unsubscribeSnapshot){unsubscribeSnapshot();unsubscribeSnapshot=null;}
+    unsubscribeSnapshot=db.collection('users').doc(currentUser.uid).onSnapshot(doc=>{
+      if(!dataLoaded){
+        // First load: initialize app
+        dataLoaded=true;
+        if(doc.exists) applyCloudData(doc.data());
+        applyTheme(theme);
+        if(activeCompanyId&&!companies.find(c=>c.id===activeCompanyId))
+          activeCompanyId=companies.length>0?companies[0].id:null;
+        document.getElementById('loginScreen').style.display='none';
+        document.getElementById('appScreen').style.display='flex';
+        setSyncStatus('synced');
+        render();
+        // Layer 3: offer restore if cloud is empty
+        if(companies.length===0) offerLocalStorageRestore();
+      } else if(saveTimer===null){
+        // Remote update from another device – apply only if no local pending changes
+        if(doc.exists){
+          applyCloudData(doc.data());
+          applyTheme(theme);
+          render();
+          setSyncStatus('synced');
+          showRemoteToast();
+        }
       }
-    }catch(e){console.error(e);}
+      // saveTimer!=null → local edits pending, ignore incoming (our save will win)
+    },err=>{console.error('Snapshot error:',err);setSyncStatus(null);});
   }
 
   // ── Auth ──
@@ -552,24 +641,19 @@
   document.getElementById('btnLogout').addEventListener('click',()=>{if(confirm('ログアウトしますか？')){document.getElementById('userDropdown').classList.remove('open');auth.signOut();}});
   document.getElementById('userAvatar').addEventListener('click',e=>{e.stopPropagation();document.getElementById('userDropdown').classList.toggle('open');});
   document.addEventListener('click',()=>document.getElementById('userDropdown').classList.remove('open'));
-  auth.onAuthStateChanged(async user=>{
+  auth.onAuthStateChanged(user=>{
     if(user){
       currentUser=user;
+      dataLoaded=false;
       const av=document.getElementById('userAvatar');
       if(user.photoURL){av.src=user.photoURL;}
       document.getElementById('userMenu').style.display='block';
       document.getElementById('userDisplayName').textContent=user.displayName||'';
       document.getElementById('userEmail').textContent=user.email||'';
-      await loadFromCloud();
-      applyTheme(theme);
-      if(activeCompanyId&&!companies.find(c=>c.id===activeCompanyId))
-        activeCompanyId=companies.length>0?companies[0].id:null;
-      document.getElementById('loginScreen').style.display='none';
-      document.getElementById('appScreen').style.display='flex';
-      setSyncStatus('synced');
-      render();
+      subscribeToCloud(); // Layer 1: real-time listener (handles init + subsequent updates)
     } else {
-      currentUser=null; companies=[]; activeCompanyId=null;
+      if(unsubscribeSnapshot){unsubscribeSnapshot();unsubscribeSnapshot=null;}
+      currentUser=null; companies=[]; activeCompanyId=null; dataLoaded=false;
       document.getElementById('userMenu').style.display='none';
       document.getElementById('loginScreen').style.display='flex';
       document.getElementById('appScreen').style.display='none';
