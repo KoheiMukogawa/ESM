@@ -475,7 +475,7 @@
   const auth=firebase.auth(), db=firebase.firestore();
 
   let companies=[], activeCompanyId=null;
-  let theme='dark', currentUser=null, saveTimer=null;
+  let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
   const countChars=t=>(t||'').replace(/\n/g,'').length;
@@ -529,6 +529,7 @@
     if(!currentUser) return;
     try{
       const doc=await db.collection('users').doc(currentUser.uid).get();
+      dataLoaded=true;
       if(doc.exists){
         const d=doc.data();
         companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
@@ -575,7 +576,7 @@
     }
   });
 
-  window.addEventListener('beforeunload',()=>{clearTimeout(saveTimer);saveToCloud();});
+  window.addEventListener('beforeunload',()=>{if(dataLoaded&&saveTimer){clearTimeout(saveTimer);saveToCloud();}});
 
   // ── Search ──
   (function(){
