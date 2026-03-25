@@ -722,13 +722,17 @@
     const bar=document.getElementById('companyTabs');
     bar.querySelectorAll('.ctab').forEach(t=>t.remove());
     const add=document.getElementById('companyAdd');
-    // sort: active/normal first, then submitted/expired
+    // sort: normal → pass/pending/submitted → fail → expired
     const today=new Date(); today.setHours(0,0,0,0);
+    const sortRank=c=>{
+      if(c.submitted&&c.result==='fail') return 2;
+      if(c.submitted||!!(c.deadline&&new Date(c.deadline)<today)) return 1;
+      return 0;
+    };
     const sorted=[...companies].sort((a,b)=>{
-      const aEnd=a.submitted||!!(a.deadline&&new Date(a.deadline)<today);
-      const bEnd=b.submitted||!!(b.deadline&&new Date(b.deadline)<today);
-      if(aEnd===bEnd) return companies.indexOf(a)-companies.indexOf(b);
-      return aEnd?1:-1;
+      const diff=sortRank(a)-sortRank(b);
+      if(diff!==0) return diff;
+      return companies.indexOf(a)-companies.indexOf(b);
     });
     sorted.forEach(c=>{
       const tab=document.createElement('div');
