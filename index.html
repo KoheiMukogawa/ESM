@@ -496,7 +496,7 @@
 
   let companies=[], activeCompanyId=null;
   let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
-  let unsubscribeSnapshot=null;
+  let unsubscribeSnapshot=null, isSavingLocally=false;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
   const countChars=t=>(t||'').replace(/\n/g,'').length;
@@ -542,11 +542,12 @@
   async function saveToCloud(){
     if(!currentUser) return;
     saveTimer=null;
+    isSavingLocally=true;
     try{
       await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       setSyncStatus('synced');
       saveLocalBackup();
-    }catch(e){console.error(e);setSyncStatus(null);}
+    }catch(e){console.error(e);setSyncStatus(null);isSavingLocally=false;}
   }
 
   // ── Layer 2: localStorage backup (up to 5 generations) ──
@@ -625,11 +626,16 @@
       } else if(saveTimer===null){
         // Remote update from another device – apply only if no local pending changes
         if(doc.exists){
-          applyCloudData(doc.data());
-          applyTheme(theme);
-          render();
-          setSyncStatus('synced');
-          showRemoteToast();
+          if(isSavingLocally){
+            // This snapshot was triggered by our own save – skip toast
+            isSavingLocally=false;
+          } else {
+            applyCloudData(doc.data());
+            applyTheme(theme);
+            render();
+            setSyncStatus('synced');
+            showRemoteToast();
+          }
         }
       }
       // saveTimer!=null → local edits pending, ignore incoming (our save will win)
