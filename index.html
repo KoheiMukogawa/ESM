@@ -489,7 +489,6 @@
 
   let companies=[], activeCompanyId=null;
   let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
-  let unsubscribeSnapshot=null;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
   const countChars=t=>(t||'').replace(/\n/g,'').length;
@@ -581,45 +580,22 @@
     document.getElementById('btnRestoreDismiss').onclick=()=>{banner.style.display='none';};
   }
 
-// ── Layer 1: onSnapshot real-time sync ──
-  function applyCloudData(d){
-    companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
-    companies.forEach(c=>(c.questions||[]).forEach(q=>{
-      if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
-      q.drafts.forEach(d=>{if(d.done===undefined) d.done=false;});
-      if(q.done){const ad=q.drafts.find(d=>d.id===q.activeDraftId);if(ad) ad.done=true;}
-      delete q.done;
-    }));
-  }
-
-  function subscribeToCloud(){
+  async function loadFromCloud(){
     if(!currentUser) return;
-    if(unsubscribeSnapshot){unsubscribeSnapshot();unsubscribeSnapshot=null;}
-    unsubscribeSnapshot=db.collection('users').doc(currentUser.uid).onSnapshot(doc=>{
-      if(!dataLoaded){
-        // First load: initialize app
-        dataLoaded=true;
-        if(doc.exists) applyCloudData(doc.data());
-        applyTheme(theme);
-        if(activeCompanyId&&!companies.find(c=>c.id===activeCompanyId))
-          activeCompanyId=companies.length>0?companies[0].id:null;
-        document.getElementById('loginScreen').style.display='none';
-        document.getElementById('appScreen').style.display='flex';
-        setSyncStatus('synced');
-        render();
-        // Layer 3: offer restore if cloud is empty
-        if(companies.length===0) offerLocalStorageRestore();
-      } else if(saveTimer===null){
-        // Remote update from another device – apply only if no local pending changes
-        if(doc.exists){
-          applyCloudData(doc.data());
-          applyTheme(theme);
-          render();
-          setSyncStatus('synced');
-        }
+    try{
+      const doc=await db.collection('users').doc(currentUser.uid).get();
+      dataLoaded=true;
+      if(doc.exists){
+        const d=doc.data();
+        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
+        companies.forEach(c=>(c.questions||[]).forEach(q=>{
+          if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
+          q.drafts.forEach(d=>{if(d.done===undefined) d.done=false;});
+          if(q.done){const ad=q.drafts.find(d=>d.id===q.activeDraftId);if(ad) ad.done=true;}
+          delete q.done;
+        }));
       }
-      // saveTimer!=null → local edits pending, ignore incoming (our save will win)
-    },err=>{console.error('Snapshot error:',err);setSyncStatus(null);});
+    }catch(e){console.error(e);}
   }
 
   // ── Auth ──
@@ -627,18 +603,24 @@
   document.getElementById('btnLogout').addEventListener('click',()=>{if(confirm('ログアウトしますか？')){document.getElementById('userDropdown').classList.remove('open');auth.signOut();}});
   document.getElementById('userAvatar').addEventListener('click',e=>{e.stopPropagation();document.getElementById('userDropdown').classList.toggle('open');});
   document.addEventListener('click',()=>document.getElementById('userDropdown').classList.remove('open'));
-  auth.onAuthStateChanged(user=>{
+  auth.onAuthStateChanged(async user=>{
     if(user){
       currentUser=user;
-      dataLoaded=false;
       const av=document.getElementById('userAvatar');
       if(user.photoURL){av.src=user.photoURL;}
       document.getElementById('userMenu').style.display='block';
       document.getElementById('userDisplayName').textContent=user.displayName||'';
       document.getElementById('userEmail').textContent=user.email||'';
-      subscribeToCloud(); // Layer 1: real-time listener (handles init + subsequent updates)
+      await loadFromCloud();
+      applyTheme(theme);
+      if(activeCompanyId&&!companies.find(c=>c.id===activeCompanyId))
+        activeCompanyId=companies.length>0?companies[0].id:null;
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('appScreen').style.display='flex';
+      setSyncStatus('synced');
+      render();
+      if(companies.length===0) offerLocalStorageRestore();
     } else {
-      if(unsubscribeSnapshot){unsubscribeSnapshot();unsubscribeSnapshot=null;}
       currentUser=null; companies=[]; activeCompanyId=null; dataLoaded=false;
       document.getElementById('userMenu').style.display='none';
       document.getElementById('loginScreen').style.display='flex';
