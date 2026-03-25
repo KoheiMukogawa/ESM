@@ -77,10 +77,6 @@
     .btn-restore:hover{opacity:.85;}
     .btn-restore-dismiss{padding:4px 10px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s;margin-left:auto;}
     .btn-restore-dismiss:hover{color:var(--text2);}
-    /* ── Remote update toast ── */
-    #remoteToast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--text2);box-shadow:var(--shadow);display:none;align-items:center;gap:8px;z-index:9999;transition:opacity .3s;}
-    #remoteToast.show{display:flex;}
-    #remoteToast .toast-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0;}
     .user-menu{position:relative;display:flex;align-items:center;}
     .user-avatar{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);object-fit:cover;cursor:pointer;transition:opacity .15s;display:block;}
     .user-avatar:hover{opacity:.8;}
@@ -298,9 +294,6 @@
   </div>
 </div>
 
-<!-- ── Remote update toast ── -->
-<div id="remoteToast"><span class="toast-dot"></span>他のデバイスからデータが更新されました</div>
-
 <!-- ── App ── -->
 <div id="appScreen">
   <!-- ── Restore banner (shown when cloud is empty but local backup exists) ── -->
@@ -496,7 +489,7 @@
 
   let companies=[], activeCompanyId=null;
   let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
-  let unsubscribeSnapshot=null, isSavingLocally=false;
+  let unsubscribeSnapshot=null;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
   const countChars=t=>(t||'').replace(/\n/g,'').length;
@@ -542,12 +535,11 @@
   async function saveToCloud(){
     if(!currentUser) return;
     saveTimer=null;
-    isSavingLocally=true;
     try{
       await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       setSyncStatus('synced');
       saveLocalBackup();
-    }catch(e){console.error(e);setSyncStatus(null);isSavingLocally=false;}
+    }catch(e){console.error(e);setSyncStatus(null);}
   }
 
   // ── Layer 2: localStorage backup (up to 5 generations) ──
@@ -589,13 +581,7 @@
     document.getElementById('btnRestoreDismiss').onclick=()=>{banner.style.display='none';};
   }
 
-  function showRemoteToast(){
-    const t=document.getElementById('remoteToast');
-    t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'),3000);
-  }
-
-  // ── Layer 1: onSnapshot real-time sync ──
+// ── Layer 1: onSnapshot real-time sync ──
   function applyCloudData(d){
     companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
     companies.forEach(c=>(c.questions||[]).forEach(q=>{
@@ -626,16 +612,10 @@
       } else if(saveTimer===null){
         // Remote update from another device – apply only if no local pending changes
         if(doc.exists){
-          if(isSavingLocally){
-            // This snapshot was triggered by our own save – skip toast
-            isSavingLocally=false;
-          } else {
-            applyCloudData(doc.data());
-            applyTheme(theme);
-            render();
-            setSyncStatus('synced');
-            showRemoteToast();
-          }
+          applyCloudData(doc.data());
+          applyTheme(theme);
+          render();
+          setSyncStatus('synced');
         }
       }
       // saveTimer!=null → local edits pending, ignore incoming (our save will win)
