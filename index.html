@@ -807,7 +807,7 @@
       <div class="sinfo-row">
         <span class="sinfo-label">URL</span>
         ${c.url
-          ? `<a class="btn-open-url-sm" href="${c.url}" target="_blank" rel="noopener">🔗 マイページを開く</a>`
+          ? `<a class="btn-open-url-sm" id="sBtnOpenUrl" href="${c.url}" target="_blank" rel="noopener">🔗 マイページを開く</a>`
           : `<span class="sinfo-value empty">未設定</span>`}
       </div>
       <div class="sinfo-row">
@@ -828,6 +828,17 @@
         <button class="btn-result fail${c.result==='fail'?' active':''}" id="sBtnFail">書類落ち</button>
       </div>`:''}
     `;
+    if(c.url&&c.loginId){
+      document.getElementById('sBtnOpenUrl').addEventListener('click',()=>{
+        navigator.clipboard.writeText(c.loginId).then(()=>{
+          const btn=document.getElementById('sBtnOpenUrl');
+          if(!btn) return;
+          const orig=btn.textContent;
+          btn.textContent='📋 IDをコピーしました';
+          setTimeout(()=>{if(btn) btn.textContent=orig;},1500);
+        }).catch(()=>{});
+      });
+    }
     document.getElementById('sBtnEdit').addEventListener('click',()=>openEditCompanyModal(c));
     document.getElementById('sBtnSubmit').addEventListener('click',()=>{
       c.submitted=!c.submitted;
