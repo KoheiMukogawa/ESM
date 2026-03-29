@@ -452,6 +452,7 @@
             <button class="btn-logout" id="btnLogout">ログアウト</button>
           </div>
         </div>
+        <button class="btn-material" id="btnMaterial">📚 素材庫</button>
         <button class="btn-help" id="btnHelp" title="使い方">?</button>
       </div>
     </div>
@@ -593,6 +594,46 @@
   </div>
 </div>
 
+<!-- ── 素材庫 Modal ── -->
+<div id="materialBg">
+  <div class="material-modal">
+    <div class="material-head">
+      <h2>📚 素材庫</h2>
+      <button class="modal-close" id="materialClose">×</button>
+    </div>
+    <div class="material-body">
+      <div class="mat-list-pane">
+        <div class="mat-cat-bar" id="matCatBar"></div>
+        <div class="mat-list" id="matList"></div>
+        <button class="mat-add-btn" id="matAddBtn">＋ 素材を追加</button>
+      </div>
+      <div class="mat-detail-pane" id="matDetailPane">
+        <div class="mat-detail-empty" id="matDetailEmpty">← 素材を選択してください</div>
+        <div id="matDetailContent" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+          <div class="mat-detail-head">
+            <input class="mat-detail-title" id="matDetailTitle" placeholder="タイトル">
+            <select class="mat-cat-select" id="matDetailCat">
+              <option value="ガクチカ">ガクチカ</option>
+              <option value="自己PR">自己PR</option>
+              <option value="自分史">自分史</option>
+              <option value="志望動機の軸">志望動機の軸</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+          <textarea class="mat-detail-text" id="matDetailText" placeholder="本文を入力..."></textarea>
+          <div class="mat-detail-foot">
+            <span class="mat-char-count" id="matCharCount">0文字</span>
+            <div class="mat-foot-btns">
+              <button class="btn-mat-del" id="matDelBtn">削除</button>
+              <button class="btn-mat-copy" id="matCopyBtn">📋 コピー</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   firebase.initializeApp({
     apiKey:"AIzaSyAQTCLPNVZiNe0qpBqHEhLu8vEMIWBE4pw",
@@ -605,6 +646,7 @@
   const auth=firebase.auth(), db=firebase.firestore();
 
   let companies=[], activeCompanyId=null;
+  let materials=[];
   let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
@@ -652,7 +694,7 @@
     if(!currentUser) return;
     saveTimer=null;
     try{
-      await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,materials,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       setSyncStatus('synced');
       saveLocalBackup();
     }catch(e){console.error(e);setSyncStatus(null);}
@@ -663,7 +705,7 @@
     if(!currentUser) return;
     try{
       const key='esmBackups_'+currentUser.uid;
-      const entry={savedAt:Date.now(),companies:JSON.parse(JSON.stringify(companies)),activeCompanyId,theme};
+      const entry={savedAt:Date.now(),companies:JSON.parse(JSON.stringify(companies)),activeCompanyId,theme,materials:JSON.parse(JSON.stringify(materials))};
       let backups=[];
       try{backups=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
       backups.unshift(entry);
@@ -688,7 +730,7 @@
     banner.style.display='flex';
     document.getElementById('btnRestoreConfirm').onclick=()=>{
       const b=getLocalBackups()[0];
-      companies=b.companies; activeCompanyId=b.activeCompanyId; theme=b.theme||theme;
+      companies=b.companies; activeCompanyId=b.activeCompanyId; theme=b.theme||theme; materials=b.materials||[];
       applyTheme(theme);
       render();
       scheduleSave();
@@ -704,7 +746,7 @@
       dataLoaded=true;
       if(doc.exists){
         const d=doc.data();
-        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
+        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark'; materials=d.materials||[];
         companies.forEach(c=>(c.questions||[]).forEach(q=>{
           if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
           q.drafts.forEach(d=>{if(d.done===undefined) d.done=false;});
@@ -1414,8 +1456,116 @@
     if(e.key==='Escape'){
       document.getElementById('addCompanyBg').classList.remove('open');
       document.getElementById('helpBg').classList.remove('open');
-    document.getElementById('addDraftBg').classList.remove('open');
+      document.getElementById('addDraftBg').classList.remove('open');
+      document.getElementById('materialBg').classList.remove('open');
     }
+  });
+
+  // ── 素材庫 ──
+  const MAT_CATS=['すべて','ガクチカ','自己PR','自分史','志望動機の軸','その他'];
+  let activeMaterialId=null, matFilterCat='すべて';
+
+  function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  function renderMaterials(){
+    const filtered=matFilterCat==='すべて'?materials:materials.filter(m=>m.cat===matFilterCat);
+    // Category bar
+    const catBar=document.getElementById('matCatBar');
+    catBar.innerHTML=MAT_CATS.map(c=>
+      `<button class="mat-cat-btn${matFilterCat===c?' active':''}" data-cat="${c}">${c}</button>`
+    ).join('');
+    catBar.querySelectorAll('.mat-cat-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{matFilterCat=btn.dataset.cat;renderMaterials();});
+    });
+    // List
+    const list=document.getElementById('matList');
+    if(filtered.length===0){
+      list.innerHTML='<div style="padding:16px 12px;font-size:12px;color:var(--text3);text-align:center;">素材がありません</div>';
+    } else {
+      list.innerHTML=filtered.map(m=>
+        `<div class="mat-item${activeMaterialId===m.id?' active':''}" data-id="${m.id}">
+          <div class="mat-item-cat">${escHtml(m.cat)}</div>
+          <div class="mat-item-title">${escHtml(m.title)||'(無題)'}</div>
+          <div class="mat-item-preview">${escHtml((m.text||'').slice(0,50))}</div>
+        </div>`
+      ).join('');
+      list.querySelectorAll('.mat-item').forEach(el=>{
+        el.addEventListener('click',()=>{activeMaterialId=el.dataset.id;renderMaterials();});
+      });
+    }
+    renderMatDetail();
+  }
+
+  function renderMatDetail(){
+    const m=materials.find(m=>m.id===activeMaterialId);
+    document.getElementById('matDetailEmpty').style.display=m?'none':'flex';
+    const content=document.getElementById('matDetailContent');
+    content.style.display=m?'flex':'none';
+    if(!m) return;
+    document.getElementById('matDetailTitle').value=m.title||'';
+    document.getElementById('matDetailCat').value=m.cat||'ガクチカ';
+    document.getElementById('matDetailText').value=m.text||'';
+    document.getElementById('matCharCount').textContent=(m.text||'').replace(/\n/g,'').length+'文字';
+  }
+
+  function openMaterialModal(){renderMaterials();document.getElementById('materialBg').classList.add('open');}
+  function closeMaterialModal(){document.getElementById('materialBg').classList.remove('open');}
+
+  document.getElementById('btnMaterial').addEventListener('click',openMaterialModal);
+  document.getElementById('materialClose').addEventListener('click',closeMaterialModal);
+  document.getElementById('materialBg').addEventListener('click',e=>{if(e.target===document.getElementById('materialBg')) closeMaterialModal();});
+
+  document.getElementById('matAddBtn').addEventListener('click',()=>{
+    const id=genId();
+    materials.push({id,title:'',cat:'ガクチカ',text:''});
+    activeMaterialId=id;
+    matFilterCat='すべて';
+    renderMaterials();
+    scheduleSave();
+    setTimeout(()=>document.getElementById('matDetailTitle').focus(),50);
+  });
+
+  document.getElementById('matDetailTitle').addEventListener('input',e=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    m.title=e.target.value;
+    const item=document.querySelector(`.mat-item[data-id="${activeMaterialId}"] .mat-item-title`);
+    if(item) item.textContent=m.title||'(無題)';
+    scheduleSave();
+  });
+
+  document.getElementById('matDetailCat').addEventListener('change',e=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    m.cat=e.target.value;
+    const item=document.querySelector(`.mat-item[data-id="${activeMaterialId}"] .mat-item-cat`);
+    if(item) item.textContent=m.cat;
+    scheduleSave();
+  });
+
+  document.getElementById('matDetailText').addEventListener('input',e=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    m.text=e.target.value;
+    document.getElementById('matCharCount').textContent=m.text.replace(/\n/g,'').length+'文字';
+    const item=document.querySelector(`.mat-item[data-id="${activeMaterialId}"] .mat-item-preview`);
+    if(item) item.textContent=(m.text||'').slice(0,50);
+    scheduleSave();
+  });
+
+  document.getElementById('matCopyBtn').addEventListener('click',()=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    navigator.clipboard.writeText(m.text||'').then(()=>{
+      const btn=document.getElementById('matCopyBtn');
+      btn.textContent='✓ コピー済み';btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('copied');},2000);
+    });
+  });
+
+  document.getElementById('matDelBtn').addEventListener('click',()=>{
+    if(!activeMaterialId) return;
+    if(!confirm('この素材を削除しますか？')) return;
+    materials=materials.filter(m=>m.id!==activeMaterialId);
+    activeMaterialId=materials.length>0?materials[materials.length-1].id:null;
+    renderMaterials();
+    scheduleSave();
   });
 </script>
 </body>
