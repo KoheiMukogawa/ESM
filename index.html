@@ -146,8 +146,11 @@
     .sinfo-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;width:34px;flex-shrink:0;}
     .sinfo-value{font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .sinfo-value.empty{color:var(--text3);font-style:italic;}
-    .btn-open-url-sm{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex:1;}
+    .btn-open-url-sm{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex:1;flex-direction:column;line-height:1.4;}
     .btn-open-url-sm:hover{background:rgba(108,143,255,.1);}
+    .btn-open-url-hint{font-size:9px;color:var(--text3);letter-spacing:.02em;}
+    /* ── Copy toast ── */
+    #copyToast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#222;color:#fff;font-size:12px;padding:8px 18px;border-radius:20px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:9999;white-space:nowrap;}
     .sinfo-actions{display:flex;gap:6px;margin-top:4px;}
     .btn-edit-sm{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
     .btn-edit-sm:hover{border-color:var(--accent);color:var(--accent);}
@@ -367,6 +370,8 @@
 </div>
 
 <!-- ── App ── -->
+<div id="copyToast">📋 ログインIDをコピーしました</div>
+
 <div id="appScreen">
   <!-- ── Restore banner (shown when cloud is empty but local backup exists) ── -->
   <div id="restoreBanner">
@@ -868,7 +873,7 @@
       <div class="sinfo-row">
         <span class="sinfo-label">URL</span>
         ${c.url
-          ? `<a class="btn-open-url-sm" id="sBtnOpenUrl" href="${c.url}" target="_blank" rel="noopener">🔗 マイページを開く</a>`
+          ? `<a class="btn-open-url-sm" id="sBtnOpenUrl" href="${c.url}" target="_blank" rel="noopener">🔗 マイページを開く${c.loginId?'<span class="btn-open-url-hint">📋 IDを自動コピー</span>':''}</a>`
           : `<span class="sinfo-value empty">未設定</span>`}
       </div>
       <div class="sinfo-row">
@@ -892,11 +897,9 @@
     if(c.url&&c.loginId){
       document.getElementById('sBtnOpenUrl').addEventListener('click',()=>{
         navigator.clipboard.writeText(c.loginId).then(()=>{
-          const btn=document.getElementById('sBtnOpenUrl');
-          if(!btn) return;
-          const orig=btn.textContent;
-          btn.textContent='📋 IDをコピーしました';
-          setTimeout(()=>{if(btn) btn.textContent=orig;},1500);
+          const toast=document.getElementById('copyToast');
+          toast.style.opacity='1';
+          setTimeout(()=>{toast.style.opacity='0';},2000);
         }).catch(()=>{});
       });
     }
