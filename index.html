@@ -27,90 +27,34 @@
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;transition:background .2s,color .2s;}
 
-    /* ── Login (landing page) ── */
-    #loginScreen{display:block;overflow-x:hidden;}
-    #loginScreen *{box-sizing:border-box;}
-    /* Nav */
-    .lp-nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 48px;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(243,244,248,0.88);backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;}
-    .lp-nav-logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;text-decoration:none;color:#0f172a;}
-    .lp-nav-icon{width:34px;height:34px;background:#2563EB;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#fff;letter-spacing:-1px;}
-    .lp-nav-cta{padding:9px 24px;background:#2563EB;color:#fff;border-radius:9px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(37,99,235,.28);}
-    .lp-nav-cta:hover{background:#1d4ed8;transform:translateY(-1px);}
-    /* Hero */
-    .lp-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 32px 80px;position:relative;overflow:hidden;background:#f3f4f8;}
-    .lp-eyebrow{font-family:'DM Mono',monospace;font-size:11px;color:#2563EB;letter-spacing:.2em;text-transform:uppercase;margin-bottom:28px;display:flex;align-items:center;gap:10px;justify-content:center;opacity:0;animation:lpFadeUp .6s .2s ease forwards;}
-    .lp-eyebrow::before,.lp-eyebrow::after{content:'';width:32px;height:1px;background:#bfcfff;}
-    .lp-h1{font-size:clamp(48px,8vw,96px);font-weight:900;line-height:1.05;letter-spacing:-.04em;margin-bottom:24px;color:#0f172a;opacity:0;animation:lpFadeUp .7s .35s ease forwards;}
-    .lp-h1 .lp-accent{color:#2563EB;}
-    .lp-h1 .lp-light{color:#94a3b8;font-weight:300;}
-    .lp-sub{font-size:16px;color:#475569;line-height:1.9;margin-bottom:52px;max-width:480px;opacity:0;animation:lpFadeUp .6s .5s ease forwards;}
-    .lp-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;opacity:0;animation:lpFadeUp .6s .65s ease forwards;}
-    .lp-btn-primary{padding:16px 38px;background:#2563EB;color:#fff;border-radius:12px;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:all .2s;box-shadow:0 6px 24px rgba(37,99,235,.32);font-family:'Noto Sans JP',sans-serif;}
-    .lp-btn-primary:hover{background:#1d4ed8;transform:translateY(-2px);box-shadow:0 10px 32px rgba(37,99,235,.42);}
-    .lp-btn-ghost{padding:16px 28px;border:1.5px solid #e2e8f0;color:#475569;border-radius:12px;font-size:14px;font-weight:600;text-decoration:none;background:#fff;transition:all .2s;}
-    .lp-btn-ghost:hover{border-color:#2563EB;color:#2563EB;}
-    .lp-note{margin-top:22px;font-size:11px;color:#94a3b8;display:flex;align-items:center;justify-content:center;gap:6px;opacity:0;animation:lpFadeUp .5s .8s ease forwards;}
-    .lp-dot-green{width:6px;height:6px;border-radius:50%;background:#10b981;animation:lpBlink 2s infinite;}
-    @keyframes lpBlink{0%,100%{opacity:1}50%{opacity:.4}}
-    .lp-scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:lpFadeUp .5s 1.1s ease forwards;}
-    .lp-scroll-mouse{width:22px;height:34px;border:2px solid #94a3b8;border-radius:11px;position:relative;}
-    .lp-scroll-mouse::after{content:'';position:absolute;top:6px;left:50%;transform:translateX(-50%);width:3px;height:6px;border-radius:2px;background:#2563EB;animation:lpScrollDot 1.8s ease-in-out infinite;}
-    @keyframes lpScrollDot{0%{top:6px;opacity:1}70%{top:18px;opacity:0}100%{top:6px;opacity:0}}
-    .lp-scroll-text{font-family:'DM Mono',monospace;font-size:10px;color:#94a3b8;letter-spacing:.15em;text-transform:uppercase;}
-    @keyframes lpFadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-    /* Features */
-    .lp-features-wrap{background:#f3f4f8;}
-    .lp-sticky-section{display:grid;grid-template-columns:1fr 1fr;max-width:1200px;margin:0 auto;padding:0 56px;gap:80px;}
-    .lp-sticky-left{position:sticky;top:50%;transform:translateY(-50%);align-self:start;height:fit-content;padding:80px 0;}
-    .lp-sticky-label{font-family:'DM Mono',monospace;font-size:10px;color:#2563EB;letter-spacing:.22em;text-transform:uppercase;margin-bottom:20px;display:block;}
-    .lp-sticky-h2{font-size:clamp(32px,4vw,52px);font-weight:900;line-height:1.15;letter-spacing:-.03em;margin-bottom:20px;color:#0f172a;}
-    .lp-sticky-h2 .lp-gray{color:#94a3b8;font-weight:300;}
-    .lp-sticky-desc{font-size:14px;color:#475569;line-height:1.9;max-width:340px;}
-    .lp-sticky-right{padding:120px 0;display:flex;flex-direction:column;gap:20px;}
-    .lp-card{background:#fff;border-radius:18px;border:1px solid #e2e8f0;padding:32px 30px;box-shadow:0 2px 16px rgba(0,0,0,.04);transition:all .35s cubic-bezier(.25,.46,.45,.94);opacity:0;transform:translateY(30px);}
-    .lp-card.visible{opacity:1;transform:translateY(0);}
-    .lp-card:hover{box-shadow:0 12px 40px rgba(37,99,235,.1);transform:translateY(-4px)!important;border-color:#bfcfff;}
-    .lp-card-num{font-family:'DM Mono',monospace;font-size:10px;color:#94a3b8;letter-spacing:.12em;margin-bottom:16px;}
-    .lp-card-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
-    .lp-card-icon{width:44px;height:44px;border-radius:12px;background:#eff4ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-    .lp-card-title{font-size:17px;font-weight:700;line-height:1.4;padding-top:4px;color:#0f172a;}
-    .lp-card-body{font-size:13px;color:#475569;line-height:1.9;}
-    .lp-card-tag{display:inline-block;margin-top:14px;font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;border-radius:20px;border:1px solid #bfcfff;color:#2563EB;letter-spacing:.08em;background:#eff4ff;}
-    .lp-card.lp-accent-card{background:linear-gradient(135deg,#1e3a8a 0%,#2563EB 100%);border-color:transparent;}
-    .lp-card.lp-accent-card .lp-card-num{color:rgba(255,255,255,.4);}
-    .lp-card.lp-accent-card .lp-card-title{color:#fff;}
-    .lp-card.lp-accent-card .lp-card-body{color:rgba(255,255,255,.75);}
-    .lp-card.lp-accent-card .lp-card-tag{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.9);background:rgba(255,255,255,.1);}
-    .lp-card.lp-accent-card .lp-card-icon{background:rgba(255,255,255,.15);}
-    .lp-divider{max-width:1200px;margin:0 auto;padding:0 56px;border-top:1px solid #e2e8f0;}
-    /* CTA */
-    .lp-cta{text-align:center;padding:160px 56px;position:relative;overflow:hidden;background:#f3f4f8;}
-    .lp-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(37,99,235,.06) 0%,transparent 70%);pointer-events:none;}
-    .lp-cta-eyebrow{font-family:'DM Mono',monospace;font-size:10px;color:#2563EB;letter-spacing:.2em;text-transform:uppercase;margin-bottom:24px;display:block;}
-    .lp-cta h2{font-size:clamp(32px,5vw,60px);font-weight:900;line-height:1.12;letter-spacing:-.03em;margin-bottom:20px;color:#0f172a;}
-    .lp-cta h2 .lp-gray{color:#94a3b8;font-weight:300;}
-    .lp-cta-sub{font-size:14px;color:#475569;line-height:1.9;margin-bottom:48px;}
-    /* Footer */
-    .lp-footer{background:#0f172a;padding:40px 56px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
-    .lp-footer-logo{display:flex;align-items:center;gap:10px;}
-    .lp-footer-icon{width:30px;height:30px;background:#2563EB;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:#fff;letter-spacing:-1px;}
-    .lp-footer-text{font-size:13px;font-weight:700;color:#fff;}
-    .lp-footer-text .lp-b{color:#2563EB;}
-    .lp-footer-text .lp-g{color:#475569;}
-    .lp-footer-tags{display:flex;gap:8px;flex-wrap:wrap;}
-    .lp-ftag{font-family:'DM Mono',monospace;font-size:10px;padding:4px 12px;border-radius:20px;border:1px solid #334155;color:#64748b;}
-    .lp-footer-copy{font-size:11px;color:#475569;}
-    @media(max-width:860px){
-      .lp-nav{padding:0 20px;}
-      .lp-sticky-section{grid-template-columns:1fr;gap:0;padding:0 24px;}
-      .lp-sticky-left{position:relative;top:auto;transform:none;padding:60px 0 32px;}
-      .lp-sticky-right{padding:0 0 80px;}
-      .lp-cta{padding:100px 24px;}
-      .lp-footer{padding:40px 24px;}
-      .lp-divider{padding:0 24px;}
+    /* ── Login ── */
+    #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f7f8fc;padding:24px;}
+    .login-wrap{display:flex;gap:48px;align-items:center;max-width:860px;width:100%;}
+    .login-pitch{flex:1;color:#1a1a2e;}
+    .login-pitch .lp-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#2563EB;font-weight:700;margin-bottom:14px;}
+    .login-pitch h1{font-size:32px;font-weight:800;line-height:1.3;margin-bottom:16px;color:#111;}
+    .login-pitch h1 span{color:#2563EB;}
+    .login-pitch .lp-lead{font-size:14px;color:#555;line-height:1.8;margin-bottom:28px;}
+    .lp-features{display:flex;flex-direction:column;gap:14px;}
+    .lp-feature{display:flex;gap:12px;align-items:flex-start;}
+    .lp-feature-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+    .lp-feature-title{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:2px;}
+    .lp-feature-desc{font-size:12px;color:#666;line-height:1.6;}
+    .login-box{background:#fff;border:1px solid #e0e0e8;border-radius:16px;padding:40px 36px;text-align:center;width:280px;flex-shrink:0;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+    .login-box .logo{font-size:32px;margin-bottom:12px;}
+    .login-box h2{font-size:18px;font-weight:700;margin-bottom:6px;color:#1a1a2e;}
+    .login-box p{font-size:12px;color:#777;line-height:1.7;margin-bottom:24px;}
+    .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 20px;background:#fff;color:#333;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+    .btn-google:hover{box-shadow:0 2px 8px rgba(0,0,0,.14);border-color:#bbb;}
+    .btn-google img{width:18px;height:18px;}
+    .login-note{font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;}
+    @media(max-width:640px){
+      .login-wrap{flex-direction:column;gap:32px;}
+      .login-pitch h1{font-size:24px;}
+      .login-box{width:100%;max-width:340px;}
     }
 
-    /* ── App ── */
+        /* ── App ── */
     #appScreen{display:none;flex-direction:column;height:100vh;}
 
     /* ── Header ── */
@@ -410,140 +354,61 @@
 </head>
 <body>
 
-<!-- ── Login (landing page) ── -->
+<!-- ── Login ── -->
 <div id="loginScreen">
+  <div class="login-wrap">
 
-  <!-- Nav -->
-  <nav class="lp-nav">
-    <div class="lp-nav-logo">
-      <div class="lp-nav-icon">ESM</div>
-      <span><span style="color:#2563EB;">ES</span><span style="color:#94a3b8;"> M</span><span style="color:#94a3b8;">anager</span></span>
-    </div>
-    <button class="lp-nav-cta trigger-login">無料で始める →</button>
-  </nav>
-
-  <!-- Hero -->
-  <section class="lp-hero">
-    <div class="lp-eyebrow">Entry Sheet Manager</div>
-    <h1 class="lp-h1">就活ESを、<br><span class="lp-accent">一か所</span><span class="lp-light">に。</span></h1>
-    <p class="lp-sub">企業・設問・草案・期限・選考状況——<br>すべてをひとつの画面で管理する。</p>
-    <div class="lp-btns">
-      <button class="lp-btn-primary trigger-login">今すぐ使う（無料）→</button>
-      <a class="lp-btn-ghost" href="#lp-features">機能を見る</a>
-    </div>
-    <p class="lp-note"><span class="lp-dot-green"></span>Googleアカウントのみ・登録不要・完全無料</p>
-    <div class="lp-scroll-hint">
-      <div class="lp-scroll-mouse"></div>
-      <span class="lp-scroll-text">scroll</span>
-    </div>
-  </section>
-
-  <!-- Features -->
-  <div class="lp-features-wrap">
-
-    <div id="lp-features" class="lp-sticky-section" style="padding-top:80px;">
-      <div class="lp-sticky-left">
-        <span class="lp-sticky-label">管理のしやすさ</span>
-        <h2 class="lp-sticky-h2">情報を<br>探す時間を、<br><span class="lp-gray">ゼロに。</span></h2>
-        <p class="lp-sticky-desc">複数企業のES・草案・期限・選考状況——バラバラになりがちな情報を、すべてひとつの画面に集約しました。</p>
-      </div>
-      <div class="lp-sticky-right">
-        <div class="lp-card">
-          <div class="lp-card-num">01</div>
-          <div class="lp-card-header"><div class="lp-card-icon">🏢</div><div class="lp-card-title">企業・設問・草案を三階層で管理</div></div>
-          <p class="lp-card-body">企業タブ → 設問サイドバー → 草案ピルの三階層構造で、すべてのESをひとつの画面から管理。ドラッグ&ドロップで自分だけの順番に並び替えられます。</p>
-          <span class="lp-card-tag">管理のしやすさ</span>
+    <!-- Pitch -->
+    <div class="login-pitch">
+      <div class="lp-eyebrow">ES Manager</div>
+      <h1>ES管理の<span>ストレス</span>を、<br>まとめて解決。</h1>
+      <p class="lp-lead">OneNoteにESを書き続けるうちに、草案や設問が増えすぎて管理しきれなくなった。<br>文字数を数えるたびにブラウザで検索して、広告だらけのサイトで確認して——<br>そんな手間をなくすために作りました。</p>
+      <div class="lp-features">
+        <div class="lp-feature">
+          <div class="lp-feature-icon">📝</div>
+          <div>
+            <div class="lp-feature-title">設問・草案を一元管理</div>
+            <div class="lp-feature-desc">企業ごとに設問をまとめ、複数の草案を書き比べ。どれが完成版か一目でわかる。</div>
+          </div>
         </div>
-        <div class="lp-card">
-          <div class="lp-card-num">02</div>
-          <div class="lp-card-header"><div class="lp-card-icon">🔗</div><div class="lp-card-title">マイページ・IDをワンクリックで</div></div>
-          <p class="lp-card-body">企業ごとにマイページURLとログインIDを保存。マイページボタンを押すと同時にIDがクリップボードにコピーされます。</p>
-          <span class="lp-card-tag">管理のしやすさ</span>
+        <div class="lp-feature">
+          <div class="lp-feature-icon">🔢</div>
+          <div>
+            <div class="lp-feature-title">リアルタイム文字数カウント</div>
+            <div class="lp-feature-desc">書きながら残り文字数がリアルタイムで表示。外部サイトへのコピペが不要になる。</div>
+          </div>
         </div>
-        <div class="lp-card">
-          <div class="lp-card-num">03</div>
-          <div class="lp-card-header"><div class="lp-card-icon">📊</div><div class="lp-card-title">選考状況をタブで一目確認</div></div>
-          <p class="lp-card-body">書類通過・結果待ち・落選を記録してタブに表示。面接前に「どんなESを提出したか」を即確認できます。</p>
-          <span class="lp-card-tag">管理のしやすさ</span>
+        <div class="lp-feature">
+          <div class="lp-feature-icon">☁️</div>
+          <div>
+            <div class="lp-feature-title">どのデバイスからでも続きを</div>
+            <div class="lp-feature-desc">Googleアカウントで自動保存。PC・スマホ・どのブラウザからでも同じデータを開ける。</div>
+          </div>
         </div>
-        <div class="lp-card">
-          <div class="lp-card-num">04</div>
-          <div class="lp-card-header"><div class="lp-card-icon">🔍</div><div class="lp-card-title">全ESをキーワード検索</div></div>
-          <p class="lp-card-body">書いた内容をキーワードで横断検索。「ガクチカ」「粘り強さ」など、過去の文章をすぐに引き出せます。</p>
-          <span class="lp-card-tag">管理のしやすさ</span>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-num">05</div>
-          <div class="lp-card-header"><div class="lp-card-icon">📝</div><div class="lp-card-title">折りたたみメモ欄</div></div>
-          <p class="lp-card-body">添削コメント・面接で突っ込まれそうな点を草案ごとに記録。執筆の邪魔にならないアコーディオン式で折りたためます。</p>
-          <span class="lp-card-tag">管理のしやすさ</span>
+        <div class="lp-feature">
+          <div class="lp-feature-icon">🚫</div>
+          <div>
+            <div class="lp-feature-title">広告なし・余計な機能なし</div>
+            <div class="lp-feature-desc">ESを書くことだけに集中できる、シンプルな設計。</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="lp-divider"></div>
-
-    <div class="lp-sticky-section">
-      <div class="lp-sticky-left">
-        <span class="lp-sticky-label">見やすさ</span>
-        <h2 class="lp-sticky-h2">集中を<br>妨げない、<br><span class="lp-gray">UI。</span></h2>
-        <p class="lp-sticky-desc">深夜の執筆でも、長時間の作業でも。疲れない色使いと直感的な操作性を追求しました。</p>
-      </div>
-      <div class="lp-sticky-right">
-        <div class="lp-card">
-          <div class="lp-card-num">06</div>
-          <div class="lp-card-header"><div class="lp-card-icon">🔢</div><div class="lp-card-title">リアルタイム文字数カウント</div></div>
-          <p class="lp-card-body">書きながら残り文字数をリアルタイムで表示。95%以上で緑・超過で赤に変化。広告だらけの外部サイトへのコピペが不要になります。</p>
-          <span class="lp-card-tag">見やすさ</span>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-num">07</div>
-          <div class="lp-card-header"><div class="lp-card-icon">🌙</div><div class="lp-card-title">ダークモード対応</div></div>
-          <p class="lp-card-body">深夜の執筆でも目に優しいダークモード。昼夜どちらでも疲れない配色設計で、長時間の作業をサポートします。</p>
-          <span class="lp-card-tag">見やすさ</span>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-num">08</div>
-          <div class="lp-card-header"><div class="lp-card-icon">🔡</div><div class="lp-card-title">文字サイズの変更</div></div>
-          <p class="lp-card-body">ヘッダーのボタンで文字サイズを自由に拡大・縮小。画面サイズや視力に合わせて快適な執筆環境を作れます。</p>
-          <span class="lp-card-tag">見やすさ</span>
-        </div>
-        <div class="lp-card lp-accent-card">
-          <div class="lp-card-num">09</div>
-          <div class="lp-card-header"><div class="lp-card-icon">☁️</div><div class="lp-card-title">クラウド＋ローカルの二重バックアップ</div></div>
-          <p class="lp-card-body">1.5秒ごとにGoogleクラウドへ自動保存。さらにブラウザにも5世代分のバックアップを保持。大切なESが消えない設計にしました。</p>
-          <span class="lp-card-tag">安全性</span>
-        </div>
-      </div>
+    <!-- Login card -->
+    <div class="login-box">
+      <div class="logo">✏️</div>
+      <h2><span style="color:#2563EB;">ES</span> <span style="color:#2563EB;">M</span>anager</h2>
+      <p>Googleアカウントでログインして、ES管理をはじめよう。</p>
+      <button class="btn-google trigger-login">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Googleでログイン
+      </button>
+      <div class="login-note">データはGoogleアカウント単位で管理されます。他のユーザーからはアクセスできません。</div>
     </div>
 
   </div>
-
-  <!-- CTA -->
-  <div class="lp-cta">
-    <span class="lp-cta-eyebrow">Get Started</span>
-    <h2>今すぐ、<br>はじめよう<span class="lp-gray">。</span></h2>
-    <p class="lp-cta-sub">登録不要・完全無料。<br>Googleアカウントがあれば今すぐ使えます。</p>
-    <button class="lp-btn-primary trigger-login">無料で始める →</button>
-  </div>
-
-  <!-- Footer -->
-  <footer class="lp-footer">
-    <div class="lp-footer-logo">
-      <div class="lp-footer-icon">ESM</div>
-      <div class="lp-footer-text"><span class="lp-b">ES</span><span class="lp-g"> M</span><span class="lp-g">anager</span></div>
-    </div>
-    <div class="lp-footer-tags">
-      <span class="lp-ftag">無料</span>
-      <span class="lp-ftag">Google認証</span>
-      <span class="lp-ftag">クラウド同期</span>
-      <span class="lp-ftag">広告なし</span>
-    </div>
-    <div class="lp-footer-copy">© 2026 向川航平</div>
-  </footer>
-
 </div>
-
 <!-- ── App ── -->
 <div id="copyToast">📋 ログインIDをコピーしました</div>
 
@@ -587,6 +452,7 @@
             <button class="btn-logout" id="btnLogout">ログアウト</button>
           </div>
         </div>
+        <button class="btn-material" id="btnMaterial">📚 素材庫</button>
         <button class="btn-help" id="btnHelp" title="使い方">?</button>
       </div>
     </div>
@@ -728,6 +594,46 @@
   </div>
 </div>
 
+<!-- ── 素材庫 Modal ── -->
+<div id="materialBg">
+  <div class="material-modal">
+    <div class="material-head">
+      <h2>📚 素材庫</h2>
+      <button class="modal-close" id="materialClose">×</button>
+    </div>
+    <div class="material-body">
+      <div class="mat-list-pane">
+        <div class="mat-cat-bar" id="matCatBar"></div>
+        <div class="mat-list" id="matList"></div>
+        <button class="mat-add-btn" id="matAddBtn">＋ 素材を追加</button>
+      </div>
+      <div class="mat-detail-pane" id="matDetailPane">
+        <div class="mat-detail-empty" id="matDetailEmpty">← 素材を選択してください</div>
+        <div id="matDetailContent" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+          <div class="mat-detail-head">
+            <input class="mat-detail-title" id="matDetailTitle" placeholder="タイトル">
+            <select class="mat-cat-select" id="matDetailCat">
+              <option value="ガクチカ">ガクチカ</option>
+              <option value="自己PR">自己PR</option>
+              <option value="自分史">自分史</option>
+              <option value="志望動機の軸">志望動機の軸</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+          <textarea class="mat-detail-text" id="matDetailText" placeholder="本文を入力..."></textarea>
+          <div class="mat-detail-foot">
+            <span class="mat-char-count" id="matCharCount">0文字</span>
+            <div class="mat-foot-btns">
+              <button class="btn-mat-del" id="matDelBtn">削除</button>
+              <button class="btn-mat-copy" id="matCopyBtn">📋 コピー</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   firebase.initializeApp({
     apiKey:"AIzaSyAQTCLPNVZiNe0qpBqHEhLu8vEMIWBE4pw",
@@ -740,6 +646,7 @@
   const auth=firebase.auth(), db=firebase.firestore();
 
   let companies=[], activeCompanyId=null;
+  let materials=[];
   let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
@@ -787,7 +694,7 @@
     if(!currentUser) return;
     saveTimer=null;
     try{
-      await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,materials,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       setSyncStatus('synced');
       saveLocalBackup();
     }catch(e){console.error(e);setSyncStatus(null);}
@@ -798,7 +705,7 @@
     if(!currentUser) return;
     try{
       const key='esmBackups_'+currentUser.uid;
-      const entry={savedAt:Date.now(),companies:JSON.parse(JSON.stringify(companies)),activeCompanyId,theme};
+      const entry={savedAt:Date.now(),companies:JSON.parse(JSON.stringify(companies)),activeCompanyId,theme,materials:JSON.parse(JSON.stringify(materials))};
       let backups=[];
       try{backups=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
       backups.unshift(entry);
@@ -823,7 +730,7 @@
     banner.style.display='flex';
     document.getElementById('btnRestoreConfirm').onclick=()=>{
       const b=getLocalBackups()[0];
-      companies=b.companies; activeCompanyId=b.activeCompanyId; theme=b.theme||theme;
+      companies=b.companies; activeCompanyId=b.activeCompanyId; theme=b.theme||theme; materials=b.materials||[];
       applyTheme(theme);
       render();
       scheduleSave();
@@ -839,7 +746,7 @@
       dataLoaded=true;
       if(doc.exists){
         const d=doc.data();
-        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark';
+        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark'; materials=d.materials||[];
         companies.forEach(c=>(c.questions||[]).forEach(q=>{
           if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
           q.drafts.forEach(d=>{if(d.done===undefined) d.done=false;});
@@ -875,16 +782,8 @@
     } else {
       currentUser=null; companies=[]; activeCompanyId=null; dataLoaded=false;
       document.getElementById('userMenu').style.display='none';
-      document.getElementById('loginScreen').style.display='block';
+      document.getElementById('loginScreen').style.display='flex';
       document.getElementById('appScreen').style.display='none';
-      // カードのスクロールアニメーション
-      requestAnimationFrame(()=>{
-        const cards=document.querySelectorAll('.lp-card');
-        const obs=new IntersectionObserver(entries=>{
-          entries.forEach(e=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),60);obs.unobserve(e.target);}});
-        },{threshold:0.15});
-        cards.forEach(c=>obs.observe(c));
-      });
     }
   });
 
@@ -1557,8 +1456,116 @@
     if(e.key==='Escape'){
       document.getElementById('addCompanyBg').classList.remove('open');
       document.getElementById('helpBg').classList.remove('open');
-    document.getElementById('addDraftBg').classList.remove('open');
+      document.getElementById('addDraftBg').classList.remove('open');
+      document.getElementById('materialBg').classList.remove('open');
     }
+  });
+
+  // ── 素材庫 ──
+  const MAT_CATS=['すべて','ガクチカ','自己PR','自分史','志望動機の軸','その他'];
+  let activeMaterialId=null, matFilterCat='すべて';
+
+  function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  function renderMaterials(){
+    const filtered=matFilterCat==='すべて'?materials:materials.filter(m=>m.cat===matFilterCat);
+    // Category bar
+    const catBar=document.getElementById('matCatBar');
+    catBar.innerHTML=MAT_CATS.map(c=>
+      `<button class="mat-cat-btn${matFilterCat===c?' active':''}" data-cat="${c}">${c}</button>`
+    ).join('');
+    catBar.querySelectorAll('.mat-cat-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{matFilterCat=btn.dataset.cat;renderMaterials();});
+    });
+    // List
+    const list=document.getElementById('matList');
+    if(filtered.length===0){
+      list.innerHTML='<div style="padding:16px 12px;font-size:12px;color:var(--text3);text-align:center;">素材がありません</div>';
+    } else {
+      list.innerHTML=filtered.map(m=>
+        `<div class="mat-item${activeMaterialId===m.id?' active':''}" data-id="${m.id}">
+          <div class="mat-item-cat">${escHtml(m.cat)}</div>
+          <div class="mat-item-title">${escHtml(m.title)||'(無題)'}</div>
+          <div class="mat-item-preview">${escHtml((m.text||'').slice(0,50))}</div>
+        </div>`
+      ).join('');
+      list.querySelectorAll('.mat-item').forEach(el=>{
+        el.addEventListener('click',()=>{activeMaterialId=el.dataset.id;renderMaterials();});
+      });
+    }
+    renderMatDetail();
+  }
+
+  function renderMatDetail(){
+    const m=materials.find(m=>m.id===activeMaterialId);
+    document.getElementById('matDetailEmpty').style.display=m?'none':'flex';
+    const content=document.getElementById('matDetailContent');
+    content.style.display=m?'flex':'none';
+    if(!m) return;
+    document.getElementById('matDetailTitle').value=m.title||'';
+    document.getElementById('matDetailCat').value=m.cat||'ガクチカ';
+    document.getElementById('matDetailText').value=m.text||'';
+    document.getElementById('matCharCount').textContent=(m.text||'').replace(/\n/g,'').length+'文字';
+  }
+
+  function openMaterialModal(){renderMaterials();document.getElementById('materialBg').classList.add('open');}
+  function closeMaterialModal(){document.getElementById('materialBg').classList.remove('open');}
+
+  document.getElementById('btnMaterial').addEventListener('click',openMaterialModal);
+  document.getElementById('materialClose').addEventListener('click',closeMaterialModal);
+  document.getElementById('materialBg').addEventListener('click',e=>{if(e.target===document.getElementById('materialBg')) closeMaterialModal();});
+
+  document.getElementById('matAddBtn').addEventListener('click',()=>{
+    const id=genId();
+    materials.push({id,title:'',cat:'ガクチカ',text:''});
+    activeMaterialId=id;
+    matFilterCat='すべて';
+    renderMaterials();
+    scheduleSave();
+    setTimeout(()=>document.getElementById('matDetailTitle').focus(),50);
+  });
+
+  document.getElementById('matDetailTitle').addEventListener('input',e=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    m.title=e.target.value;
+    const item=document.querySelector(`.mat-item[data-id="${activeMaterialId}"] .mat-item-title`);
+    if(item) item.textContent=m.title||'(無題)';
+    scheduleSave();
+  });
+
+  document.getElementById('matDetailCat').addEventListener('change',e=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    m.cat=e.target.value;
+    const item=document.querySelector(`.mat-item[data-id="${activeMaterialId}"] .mat-item-cat`);
+    if(item) item.textContent=m.cat;
+    scheduleSave();
+  });
+
+  document.getElementById('matDetailText').addEventListener('input',e=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    m.text=e.target.value;
+    document.getElementById('matCharCount').textContent=m.text.replace(/\n/g,'').length+'文字';
+    const item=document.querySelector(`.mat-item[data-id="${activeMaterialId}"] .mat-item-preview`);
+    if(item) item.textContent=(m.text||'').slice(0,50);
+    scheduleSave();
+  });
+
+  document.getElementById('matCopyBtn').addEventListener('click',()=>{
+    const m=materials.find(m=>m.id===activeMaterialId);if(!m) return;
+    navigator.clipboard.writeText(m.text||'').then(()=>{
+      const btn=document.getElementById('matCopyBtn');
+      btn.textContent='✓ コピー済み';btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('copied');},2000);
+    });
+  });
+
+  document.getElementById('matDelBtn').addEventListener('click',()=>{
+    if(!activeMaterialId) return;
+    if(!confirm('この素材を削除しますか？')) return;
+    materials=materials.filter(m=>m.id!==activeMaterialId);
+    activeMaterialId=materials.length>0?materials[materials.length-1].id:null;
+    renderMaterials();
+    scheduleSave();
   });
 </script>
 </body>
