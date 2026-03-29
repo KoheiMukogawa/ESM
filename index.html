@@ -28,14 +28,32 @@
     body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;transition:background .2s,color .2s;}
 
     /* ── Login ── */
-    #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;}
-    .login-box{background:#fff;border:1px solid #e0e0e8;border-radius:16px;padding:48px 40px;text-align:center;max-width:360px;width:90%;box-shadow:0 4px 24px rgba(0,0,0,0.10);}
-    .login-box .logo{font-size:36px;margin-bottom:16px;}
-    .login-box h2{font-size:20px;font-weight:700;margin-bottom:8px;color:#1a1a2e;}
-    .login-box p{font-size:13px;color:#555;line-height:1.7;margin-bottom:28px;}
-    .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 20px;background:#fff;color:#333;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;}
-    .btn-google:hover{opacity:.88;}
+    #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f7f8fc;padding:24px;}
+    .login-wrap{display:flex;gap:48px;align-items:center;max-width:860px;width:100%;}
+    .login-pitch{flex:1;color:#1a1a2e;}
+    .login-pitch .lp-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#2563EB;font-weight:700;margin-bottom:14px;}
+    .login-pitch h1{font-size:32px;font-weight:800;line-height:1.3;margin-bottom:16px;color:#111;}
+    .login-pitch h1 span{color:#2563EB;}
+    .login-pitch .lp-lead{font-size:14px;color:#555;line-height:1.8;margin-bottom:28px;}
+    .lp-features{display:flex;flex-direction:column;gap:14px;}
+    .lp-feature{display:flex;gap:12px;align-items:flex-start;}
+    .lp-feature-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+    .lp-feature-body{}
+    .lp-feature-title{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:2px;}
+    .lp-feature-desc{font-size:12px;color:#666;line-height:1.6;}
+    .login-box{background:#fff;border:1px solid #e0e0e8;border-radius:16px;padding:40px 36px;text-align:center;width:280px;flex-shrink:0;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+    .login-box .logo{font-size:32px;margin-bottom:12px;}
+    .login-box h2{font-size:18px;font-weight:700;margin-bottom:6px;color:#1a1a2e;}
+    .login-box p{font-size:12px;color:#777;line-height:1.7;margin-bottom:24px;}
+    .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 20px;background:#fff;color:#333;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+    .btn-google:hover{box-shadow:0 2px 8px rgba(0,0,0,.14);border-color:#bbb;}
     .btn-google img{width:18px;height:18px;}
+    .login-box .login-note{font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;}
+    @media(max-width:640px){
+      .login-wrap{flex-direction:column;gap:32px;}
+      .login-pitch h1{font-size:24px;}
+      .login-box{width:100%;max-width:340px;}
+    }
 
     /* ── App ── */
     #appScreen{display:none;flex-direction:column;height:100vh;}
@@ -294,14 +312,57 @@
 
 <!-- ── Login ── -->
 <div id="loginScreen">
-  <div class="login-box">
-    <div class="logo">✏️</div>
-    <h2><span style="font-size:22px;font-weight:700;"><span style="color:#2563EB;">ES</span><span> </span><span style="color:#2563EB;">M</span><span>anager</span></span></h2>
-    <p>天才向川君が作成したES一元管理システム！<br>Googleアカウントでログインすると、<br>どのデバイスからでも作業を続けられます。</p>
-    <button class="btn-google" id="btnLogin">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-      Googleでログイン
-    </button>
+  <div class="login-wrap">
+
+    <!-- Pitch -->
+    <div class="login-pitch">
+      <div class="lp-eyebrow">ES Manager</div>
+      <h1>ES管理の<span>ストレス</span>を、<br>まとめて解決。</h1>
+      <p class="lp-lead">OneNoteにESを書き続けるうちに、草案や設問が増えすぎて管理しきれなくなった。<br>文字数を数えるたびにブラウザで検索して、広告だらけのサイトで確認して——<br>そんな手間をなくすために作りました。</p>
+      <div class="lp-features">
+        <div class="lp-feature">
+          <div class="lp-feature-icon">📝</div>
+          <div class="lp-feature-body">
+            <div class="lp-feature-title">設問・草案を一元管理</div>
+            <div class="lp-feature-desc">企業ごとに設問をまとめ、複数の草案を書き比べ。どれが完成版か一目でわかる。</div>
+          </div>
+        </div>
+        <div class="lp-feature">
+          <div class="lp-feature-icon">🔢</div>
+          <div class="lp-feature-body">
+            <div class="lp-feature-title">リアルタイム文字数カウント</div>
+            <div class="lp-feature-desc">書きながら残り文字数がリアルタイムで表示。外部サイトへのコピペが不要になる。</div>
+          </div>
+        </div>
+        <div class="lp-feature">
+          <div class="lp-feature-icon">☁️</div>
+          <div class="lp-feature-body">
+            <div class="lp-feature-title">どのデバイスからでも続きを</div>
+            <div class="lp-feature-desc">Googleアカウントで自動保存。PC・スマホ・どのブラウザからでも同じデータを開ける。</div>
+          </div>
+        </div>
+        <div class="lp-feature">
+          <div class="lp-feature-icon">🚫</div>
+          <div class="lp-feature-body">
+            <div class="lp-feature-title">広告なし・余計な機能なし</div>
+            <div class="lp-feature-desc">ESを書くことだけに集中できる、シンプルな設計。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login card -->
+    <div class="login-box">
+      <div class="logo">✏️</div>
+      <h2><span style="color:#2563EB;">ES</span> <span style="color:#2563EB;">M</span>anager</h2>
+      <p>Googleアカウントでログインして、ES管理をはじめよう。</p>
+      <button class="btn-google" id="btnLogin">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Googleでログイン
+      </button>
+      <div class="login-note">データはGoogleアカウント単位で管理されます。他のユーザーからはアクセスできません。</div>
+    </div>
+
   </div>
 </div>
 
