@@ -404,6 +404,7 @@
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
         Googleでログイン
       </button>
+      <div id="loginError" style="display:none;margin-top:12px;padding:10px 12px;background:#fff0f0;border:1px solid #fca5a5;border-radius:8px;font-size:11px;color:#dc2626;line-height:1.6;text-align:left;word-break:break-all;"></div>
       <div class="login-note">データはGoogleアカウント単位で管理されます。他のユーザーからはアクセスできません。</div>
     </div>
 
@@ -758,7 +759,14 @@
   }
 
   // ── Auth ──
-  document.querySelectorAll('.trigger-login').forEach(el=>el.addEventListener('click',()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())));
+  document.querySelectorAll('.trigger-login').forEach(el=>el.addEventListener('click',()=>{
+    const errEl=document.getElementById('loginError');
+    if(errEl) errEl.style.display='none';
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err=>{
+      console.error('Auth error:',err);
+      if(errEl){errEl.style.display='block';errEl.textContent='エラー: '+err.code+' — '+err.message;}
+    });
+  }));
   document.getElementById('btnLogout').addEventListener('click',()=>{if(confirm('ログアウトしますか？')){document.getElementById('userDropdown').classList.remove('open');auth.signOut();}});
   document.getElementById('userAvatar').addEventListener('click',e=>{e.stopPropagation();document.getElementById('userDropdown').classList.toggle('open');});
   document.addEventListener('click',()=>document.getElementById('userDropdown').classList.remove('open'));
