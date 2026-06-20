@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "source": "functions",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "*.local",
+      ".runtimeconfig.json",
+      "firebase-debug.log"
+    ]
+  }
+}

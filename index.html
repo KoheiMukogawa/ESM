@@ -1575,6 +1575,33 @@
     renderMaterials();
     scheduleSave();
   });
+
+  // ── Claude AI 連携（全AI機能の共通入口。Phase 0 以降ずっと使う）──
+  const AI_ENDPOINT = "https://asia-northeast1-escounter-d9db7.cloudfunctions.net/ai";
+  async function callAI({ system, messages, maxTokens, onDelta }){
+    const token = await currentUser.getIdToken();
+    const res = await fetch(AI_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({ system, messages, max_tokens: maxTokens })
+    });
+    if(!res.body){ throw new Error('応答なし (HTTP '+res.status+')'); }
+    const reader=res.body.getReader(), dec=new TextDecoder();
+    let buf='', full='';
+    for(;;){
+      const {value,done}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const parts=buf.split('\n\n'); buf=parts.pop();
+      for(const p of parts){
+        const line=p.replace(/^data: /,''); if(!line) continue;
+        const e=JSON.parse(line);
+        if(e.delta){ full+=e.delta; if(onDelta) onDelta(e.delta, full); }
+        if(e.error) throw new Error(e.error);
+      }
+    }
+    return full;
+  }
 </script>
+
 </body>
 </html>
