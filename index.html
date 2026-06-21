@@ -327,6 +327,9 @@
     .chat-send{flex-shrink:0;height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:opacity .15s;}
     .chat-send:disabled{opacity:.5;cursor:default;}
     .chat-actions{display:flex;justify-content:flex-end;padding:0 22px 12px;background:var(--surface2);}
+    /* ── 自分史インタビュー modal ── */
+    #ivModal{max-width:560px;height:80vh;display:flex;flex-direction:column;overflow:hidden;}
+    #ivModal .chat-log{flex:1;max-height:none;border-top:none;}
 
     /* ── 素材庫 modal ── */
     #materialBg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;}
@@ -626,7 +629,7 @@
         <h3>📄 草案の使い方</h3>
         <ul>
           <li>1つの設問に複数の草案を作って書き比べができる</li>
-          <li><span class="htag">＋ 追加</span> で新しい草案、<span class="htag">複製</span> で今の草案をコピー</li>
+          <li><span class="htag">＋ 追加</span> で新しい草案、<span class="htag">Clawd</span> で下書き/添削、<span class="htag">切り口</span> で書く方向性を提案</li>
           <li>草案名はアクティブな草案のタグをクリックして直接編集できる</li>
           <li>草案の <span class="htag">×</span> で削除（最後の1つは削除不可）</li>
         </ul>
@@ -648,6 +651,7 @@
         <div class="mat-cat-bar" id="matCatBar"></div>
         <div class="mat-list" id="matList"></div>
         <button class="mat-add-btn" id="matAddBtn">＋ 素材を追加</button>
+        <button class="mat-add-btn" id="matIvBtn" style="border-color:var(--accent);color:var(--accent);">💬 対話で自分史を作る</button>
       </div>
       <div class="mat-detail-pane" id="matDetailPane">
         <div class="mat-detail-empty" id="matDetailEmpty">← 素材を選択してください</div>
@@ -672,6 +676,25 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 自分史インタビュー Modal ── -->
+<div class="modal-bg" id="ivBg">
+  <div class="modal" id="ivModal">
+    <div class="modal-head">
+      <h2>💬 対話で自分史を作る</h2>
+      <button class="modal-close" id="ivClose">×</button>
+    </div>
+    <div class="chat-log" id="ivLog"></div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="ivInput" rows="1" placeholder="答えを入力…"></textarea>
+      <button class="chat-send" id="ivSend">送信</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="ivCancel">閉じる</button>
+      <button class="btn-primary" id="ivSave">素材庫に保存</button>
     </div>
   </div>
 </div>
@@ -1813,7 +1836,10 @@ ${cur||'(まだ空)'}`+guidelineBlock();
     // List
     const list=document.getElementById('matList');
     if(filtered.length===0){
-      list.innerHTML='<div style="padding:16px 12px;font-size:12px;color:var(--text3);text-align:center;">素材がありません</div>';
+      list.innerHTML=(materials.length===0)
+        ? '<div style="padding:16px 12px;font-size:12px;color:var(--text3);text-align:center;line-height:1.9;">まだ素材がありません。<br>まずは自分史から。<br><button id="matIvEmptyBtn" class="mat-add-btn" style="margin-top:10px;border-color:var(--accent);color:var(--accent);">💬 対話で自分史を作る</button></div>'
+        : '<div style="padding:16px 12px;font-size:12px;color:var(--text3);text-align:center;">このカテゴリの素材はありません</div>';
+      const eb=document.getElementById('matIvEmptyBtn'); if(eb) eb.addEventListener('click',openInterview);
     } else {
       list.innerHTML=filtered.map(m=>
         `<div class="mat-item${activeMaterialId===m.id?' active':''}" data-id="${m.id}">
@@ -1857,12 +1883,92 @@ ${cur||'(まだ空)'}`+guidelineBlock();
     closeGuideModal();
   }
 
+  // ── 自分史インタビュー（最小版）：対話で引き出し、素材庫に自分史として保存 ──
+  let ivChat=[];
+  function renderIvLog(){
+    const log=document.getElementById('ivLog'); if(!log) return;
+    log.innerHTML=ivChat.map(m=>`<div class="chat-msg ${m.role==='user'?'user':'ai'}">${escHtml(m.content)}</div>`).join('');
+    log.scrollTop=log.scrollHeight;
+  }
+  function openInterview(){
+    const mb=document.getElementById('materialBg'); if(mb) mb.classList.remove('open');
+    ivChat=[{role:'assistant',content:'自分史を一緒に作りましょう。まず、これまで（学生時代〜今）で「自分を形づくった出来事」を1つ教えてください。部活・アルバイト・受験・人間関係…何でもOKです。'}];
+    renderIvLog();
+    document.getElementById('ivBg').classList.add('open');
+    setTimeout(()=>{const el=document.getElementById('ivInput'); if(el) el.focus();},50);
+  }
+  function closeInterview(){document.getElementById('ivBg').classList.remove('open');}
+  async function ivSend(){
+    if(typeof currentUser==='undefined'||!currentUser){alert('ログインが必要です。');return;}
+    const input=document.getElementById('ivInput'),sendBtn=document.getElementById('ivSend');
+    if(!input) return;
+    const msg=input.value.trim(); if(!msg) return;
+    if(sendBtn&&sendBtn.disabled) return;
+    ivChat.push({role:'user',content:msg});
+    ivChat.push({role:'assistant',content:''});
+    const ai=ivChat.length-1;
+    input.value='';input.style.height='auto';
+    renderIvLog();
+    if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='…';}
+    const system=
+`あなたは就活生の「自分史」づくりに伴走するインタビュアーです。対話で本人の経験・転機・価値観を引き出します。
+- 一度に1つだけ、答えやすい短い質問をする（打ち込んだこと／転機／挫折と乗り越え／大事にしている価値観 など）。
+- 本人が語った事実だけを扱い、捏造しない。深掘りは「なぜ？その時どう感じた？何を学んだ？」。
+- 共感は一言まで。質問が主役。テンポよく。
+- 全体像が見えてきたら「だいたい揃いました。右下の『素材庫に保存』で自分史にまとめます」と促す。`+guidelineBlock();
+    try{
+      await callAI({system,messages:ivChat.slice(0,ai).map(m=>({role:m.role,content:m.content})),maxTokens:1000,
+        onDelta:(_,f)=>{ if(ivChat[ai]){ivChat[ai].content=f; const log=document.getElementById('ivLog'); if(log){const bs=log.querySelectorAll('.chat-msg.ai');const last=bs[bs.length-1]; if(last){last.textContent=f;log.scrollTop=log.scrollHeight;}else renderIvLog();}} }
+      });
+    }catch(e){
+      if(ivChat[ai]&&!ivChat[ai].content){ivChat[ai].content='（エラー: '+((e&&e.message)||e)+'）';renderIvLog();}
+      else alert('送信に失敗しました: '+((e&&e.message)||e));
+    }finally{
+      const b=document.getElementById('ivSend'); if(b){b.disabled=false;b.textContent='送信';}
+    }
+  }
+  async function ivSave(){
+    if(typeof currentUser==='undefined'||!currentUser){alert('ログインが必要です。');return;}
+    if(!ivChat.some(m=>m.role==='user'&&m.content.trim())){alert('まず対話で答えてから保存してください。');return;}
+    const btn=document.getElementById('ivSave');
+    if(btn&&btn.disabled) return;
+    if(btn){btn.disabled=true;btn.textContent='まとめ中…';}
+    const convo=ivChat.map(m=>`${m.role==='user'?'本人':'AI'}: ${m.content}`).join('\n');
+    const system=
+`これまでの対話から、応募者の「自分史」を一人称でまとめてください。
+- 対話で出た事実・経験・価値観だけを使い、捏造しない。
+- 転機ごと（または時系列）に読みやすく。各エピソードは〈出来事→なぜ／どう感じた→学び・価値観〉を含める。
+- これはES素材なので、後で各設問に使い回せるよう具体を残す。
+- 出力は自分史の本文のみ。前置き・講評は書かない。`+guidelineBlock();
+    try{
+      const text=await callAI({system,messages:[{role:'user',content:'【対話】\n'+convo+'\n\nこの内容で自分史をまとめてください。'}],maxTokens:3000});
+      const id=genId();
+      materials.push({id,cat:'自分史',title:'自分史',text:(text||'').trim()});
+      activeMaterialId=id; matFilterCat='すべて';
+      scheduleSave();
+      closeInterview();
+      openMaterialModal();
+    }catch(e){
+      alert('まとめに失敗しました: '+((e&&e.message)||e));
+    }finally{
+      const b=document.getElementById('ivSave'); if(b){b.disabled=false;b.textContent='素材庫に保存';}
+    }
+  }
+
   document.getElementById('btnMaterial').addEventListener('click',openMaterialModal);
   document.getElementById('btnGuide').addEventListener('click',openGuideModal);
   document.getElementById('guideClose').addEventListener('click',closeGuideModal);
   document.getElementById('guideCancel').addEventListener('click',closeGuideModal);
   document.getElementById('guideSave').addEventListener('click',saveGuide);
   document.getElementById('guideBg').addEventListener('click',e=>{if(e.target===document.getElementById('guideBg')) closeGuideModal();});
+  document.getElementById('matIvBtn').addEventListener('click',openInterview);
+  document.getElementById('ivClose').addEventListener('click',closeInterview);
+  document.getElementById('ivCancel').addEventListener('click',closeInterview);
+  document.getElementById('ivSend').addEventListener('click',ivSend);
+  document.getElementById('ivInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(120,this.scrollHeight)+'px';});
+  document.getElementById('ivInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ivSend();}});
+  document.getElementById('ivSave').addEventListener('click',ivSave);
+  document.getElementById('ivBg').addEventListener('click',e=>{if(e.target===document.getElementById('ivBg')) closeInterview();});
   document.getElementById('usageChip').addEventListener('click',()=>{
     const usd=aiUsage.inputTokens/1e6*5 + aiUsage.outputTokens/1e6*25;
     alert(`Claude 使用量（このアプリ導入後の概算）\n\n入力トークン: ${aiUsage.inputTokens.toLocaleString()}\n出力トークン: ${aiUsage.outputTokens.toLocaleString()}\n呼び出し回数: ${aiUsage.calls}\n\n概算コスト: $${usd.toFixed(4)}（≈¥${Math.round(usd*155)}）\n\n※ 公開単価（入力 $5 / 出力 $25 per 1M トークン）× トークン数の概算です。正確な請求額は Anthropic コンソール（console.anthropic.com）で確認してください。`);
