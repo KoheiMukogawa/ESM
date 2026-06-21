@@ -86,6 +86,8 @@
     .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:background .3s;}
     .sync-dot.syncing{background:var(--warn);animation:pulse 1s infinite;}
     .sync-dot.synced{background:var(--ok);}
+    .usage-chip{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;cursor:pointer;padding:2px 8px;border:1px solid var(--border);border-radius:20px;transition:all .15s;white-space:nowrap;}
+    .usage-chip:hover{border-color:var(--accent);color:var(--accent);}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     /* ── Restore banner ── */
     #restoreBanner{display:none;align-items:center;gap:10px;padding:8px 20px;background:rgba(251,191,36,.12);border-bottom:1px solid var(--warn);font-size:12px;color:var(--warn);flex-shrink:0;}
@@ -457,6 +459,7 @@
           <div class="sync-dot" id="syncDot"></div>
           <span id="syncLabel">--</span>
         </div>
+        <span class="usage-chip" id="usageChip" title="クリックで内訳（概算）">≈$0.000</span>
         <div class="user-menu" id="userMenu" style="display:none">
           <img class="user-avatar" id="userAvatar" src="" alt="">
           <div class="user-dropdown" id="userDropdown">
@@ -468,6 +471,7 @@
           </div>
         </div>
         <button class="btn-material" id="btnMaterial">📚 素材庫</button>
+        <button class="btn-material" id="btnGuide" title="Claudeに、あなたの添削・ES作成の方針を教える（チャット・添削・下書き すべてに効きます）">🎓 Claudeに教える</button>
         <button class="btn-help" id="btnHelp" title="使い方">?</button>
       </div>
     </div>
@@ -543,6 +547,27 @@
     <div class="modal-foot">
       <button class="btn-cancel" id="addDraftCancel">キャンセル</button>
       <button class="btn-primary" id="addDraftConfirm">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AIガイド Modal ── -->
+<div class="modal-bg" id="guideBg">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <h2>🎓 Claudeに教える</h2>
+      <button class="modal-close" id="guideClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">方針・お手本（Claudeが全機能で守ります）</label>
+        <textarea class="modal-input" id="guideText" style="min-height:300px;resize:vertical;line-height:1.7;" placeholder="方針・お手本（「ひな形を挿入」も使えます）"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="guideTemplate" style="margin-right:auto;">ひな形を挿入</button>
+      <button class="btn-cancel" id="guideCancel">閉じる</button>
+      <button class="btn-primary" id="guideSave">保存</button>
     </div>
   </div>
 </div>
@@ -662,6 +687,10 @@
 
   let companies=[], activeCompanyId=null;
   let materials=[];
+  let guidelines='';
+  let aiUsage={inputTokens:0,outputTokens:0,calls:0};
+  // AIガイドライン（ユーザーが育てる方針）を system 末尾に足すブロック。空なら何も足さない＝全AI機能で共通利用。
+  function guidelineBlock(){const g=(guidelines||'').trim();return g?`\n\n【このユーザーの添削・ES作成の方針（最優先で守る）】\n${g}`:'';}
   let theme='dark', currentUser=null, saveTimer=null, dataLoaded=false;
 
   const genId=()=>Math.random().toString(36).slice(2,9);
@@ -709,7 +738,7 @@
     if(!currentUser) return;
     saveTimer=null;
     try{
-      await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,materials,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await db.collection('users').doc(currentUser.uid).set({companies,activeCompanyId,theme,materials,guidelines,aiUsage,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       setSyncStatus('synced');
       saveLocalBackup();
     }catch(e){console.error(e);setSyncStatus(null);}
@@ -720,7 +749,7 @@
     if(!currentUser) return;
     try{
       const key='esmBackups_'+currentUser.uid;
-      const entry={savedAt:Date.now(),companies:JSON.parse(JSON.stringify(companies)),activeCompanyId,theme,materials:JSON.parse(JSON.stringify(materials))};
+      const entry={savedAt:Date.now(),companies:JSON.parse(JSON.stringify(companies)),activeCompanyId,theme,materials:JSON.parse(JSON.stringify(materials)),guidelines,aiUsage};
       let backups=[];
       try{backups=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
       backups.unshift(entry);
@@ -745,7 +774,7 @@
     banner.style.display='flex';
     document.getElementById('btnRestoreConfirm').onclick=()=>{
       const b=getLocalBackups()[0];
-      companies=b.companies; activeCompanyId=b.activeCompanyId; theme=b.theme||theme; materials=b.materials||[];
+      companies=b.companies; activeCompanyId=b.activeCompanyId; theme=b.theme||theme; materials=b.materials||[]; guidelines=b.guidelines||''; aiUsage=b.aiUsage||{inputTokens:0,outputTokens:0,calls:0};
       applyTheme(theme);
       render();
       scheduleSave();
@@ -761,7 +790,7 @@
       dataLoaded=true;
       if(doc.exists){
         const d=doc.data();
-        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark'; materials=d.materials||[];
+        companies=d.companies||[]; activeCompanyId=d.activeCompanyId||null; theme=d.theme||'dark'; materials=d.materials||[]; guidelines=d.guidelines||''; aiUsage=d.aiUsage||{inputTokens:0,outputTokens:0,calls:0};
         companies.forEach(c=>(c.questions||[]).forEach(q=>{
           if(!q.drafts){q.drafts=[{id:genId(),name:'草案1',text:q.text||''}];q.activeDraftId=q.drafts[0].id;delete q.text;}
           q.drafts.forEach(d=>{if(d.done===undefined) d.done=false;});
@@ -869,7 +898,7 @@
   })();
 
   // ── Render ──
-  function render(){renderCompanyTabs();renderInfoPanel();renderSidebar();renderMain();renderTitle();}
+  function render(){renderCompanyTabs();renderInfoPanel();renderSidebar();renderMain();renderTitle();renderUsage();}
 
   function renderTitle(){
     document.title='ES Manager';
@@ -1139,7 +1168,7 @@
         <div class="draft-actions">
           <button class="btn-draft" id="btnDraftAdd">＋ 追加</button>
           <button class="btn-draft" id="btnDraftDupe">複製</button>
-          <button class="btn-draft ai" id="btnDraftRefine" title="今の草案をAIが推敲し、新しい草案として作ります（元は残ります）">✨ 添削</button>
+          <button class="btn-draft ai" id="btnDraftRefine" title="今の草案をClaudeが推敲し、新しい草案として作ります（元は残ります）">✨ 添削</button>
         </div>
       </div>
       <div class="q-textarea-wrap">
@@ -1159,13 +1188,13 @@
       <div class="memo-accordion">
         <div class="memo-toggle" id="chatToggle">
           <span class="memo-toggle-icon">▶</span>
-          <span class="memo-toggle-label">💬 AIと相談</span>
+          <span class="memo-toggle-label">Claude</span>
           <span class="memo-toggle-preview" id="chatPreview">クリックして開く</span>
         </div>
         <div class="memo-body" id="chatBody">
           <div class="chat-log" id="chatLog"></div>
           <div class="chat-input-row">
-            <textarea class="chat-input" id="chatInput" rows="1" placeholder="例: 部活のエピソードで書きたい / もっと簡潔に / 結論を強く"></textarea>
+            <textarea class="chat-input" id="chatInput" rows="1" placeholder="相談…"></textarea>
             <button class="chat-send" id="chatSend">送信</button>
           </div>
           <div class="chat-actions">
@@ -1332,7 +1361,7 @@
     if(refineBtn){
       const has=!!(d&&(d.text||'').trim());
       refineBtn.textContent=has?'✨ 添削':'✨ 下書き';
-      refineBtn.title=has?'今の草案をAIが推敲し、新しい草案として作ります（元は残ります）':'素材庫をもとに、AIが設問の下書き（たたき台）を作ります';
+      refineBtn.title=has?'今の草案をClaudeが推敲し、新しい草案として作ります（元は残ります）':'素材庫をもとに、Claudeが設問の下書き（たたき台）を作ります';
     }
     updateCounter(card,q);
     // memo
@@ -1443,7 +1472,7 @@
     let target, createdId=null;
     if(mode==='refine'){
       createdId=genId();
-      target={id:createdId,name:(src.name||'草案')+'（添削）',text:'',done:false,memo:src.memo||''};
+      target={id:createdId,name:(src.name||'草案')+'（添削）',text:'',done:false,memo:''};
       q.drafts.push(target);q.activeDraftId=createdId;
       render();
     } else {
@@ -1466,7 +1495,10 @@
 - 応募者が実際に書いた内容・経験・エピソードを尊重し、事実を捏造しない。新しい実績・数字・固有名詞を勝手に足さない。
 - 結論ファースト（結論→具体的な根拠→学び/活かし方）。具体性・一貫性・読みやすさを高める。
 - 設問に正面から答える。文字数制限がある場合は必ずその字数以内に収める。
-- 出力は推敲後のES本文のみ。前置き・解説・講評・記号での囲みは一切付けない。`;
+出力の形式（厳守）:
+(1) まず推敲後のES本文だけを書く（前置き・記号囲みなし）。
+(2) 次の行に区切り「===変更点===」を単独で置く。
+(3) その後に主な変更点を3〜6個、各1行「・〈何をどう変えた〉（理由）」の形で簡潔に書く。`+guidelineBlock();
       user=
 `【設問】\n${label||'(設問文は未入力)'}\n\n【文字数】\n${limitLine}\n\n【応募者の解答（これを推敲してください）】\n${(src.text||'').trim()}`;
     } else {
@@ -1480,7 +1512,7 @@
 - 結論ファースト（結論→具体的な根拠→学び/活かし方）。設問に正面から答える。
 - 素材が足りず埋められない箇所は無理に作り込まず、［要補足：…］のように明示する。
 - 文字数制限がある場合は必ずその字数以内に収める。
-- 出力はES本文（たたき台）のみ。前置き・解説は書かない。`;
+- 出力はES本文（たたき台）のみ。前置き・解説は書かない。`+guidelineBlock();
       user=
 `【企業】${company||'(未設定)'}\n\n【設問】\n${label||'(設問文は未入力)'}\n\n【文字数】\n${limitLine}\n\n【応募者の素材庫】\n${mats||'(素材庫は空です。捏造はせず、一般的な構成のたたき台にし、具体は［要補足：…］で示してください)'}`;
     }
@@ -1491,18 +1523,31 @@
         messages:[{role:'user',content:user}],
         maxTokens:Math.min(6000,Math.max(2000,limit*3)),
         onDelta:(_,full)=>{
-          target.text=full;
+          // 添削モードは「本文 ===変更点=== 理由」を分割：本文→草案、変更点→メモ
+          let body=full;
+          if(mode==='refine'){
+            const i=full.indexOf('===変更点===');
+            if(i>=0){body=full.slice(0,i).replace(/\s+$/,'');target.memo=full.slice(i+'===変更点==='.length).replace(/^\s+/,'');}
+          }
+          target.text=body;
           // この設問・この草案を表示中のときだけ画面に反映（別画面に移動してもデータは更新される）
           if(activeQuestion()===q && q.activeDraftId===target.id){
             const live=document.getElementById('cardText');
             if(live){
-              live.value=full;
+              live.value=body;
               live.style.height='auto';live.style.height=Math.max(220,live.scrollHeight)+'px';
               const c=live.closest('.question-card');if(c) updateCounter(c,q);
             }
           }
         }
       });
+      // 添削の変更点をメモに表示し、自動で開いて「どこをなぜ変えたか」を見せる
+      if(mode==='refine' && (target.memo||'').trim() && activeQuestion()===q && q.activeDraftId===target.id){
+        const mt=document.getElementById('memoText'),mp=document.getElementById('memoPreview'),mb=document.getElementById('memoBody'),mtg=document.getElementById('memoToggle');
+        if(mt){mt.value=target.memo;mt.style.height='auto';mt.style.height=mt.scrollHeight+'px';}
+        if(mp) updateMemoPreview(mp,target.memo);
+        if(mb&&mtg){mb.classList.add('open');mtg.classList.add('open');}
+      }
     }catch(e){
       if(mode==='refine' && !target.text){ // 推敲で何も生成されず失敗 → 空の草案を片付けて元に戻す
         const idx=q.drafts.findIndex(x=>x.id===createdId);
@@ -1522,11 +1567,13 @@
   }
 
   // ── AIと相談（Phase 2 ①：自分史チャット。対話で内容を固め、[反映]で草案に書き戻す）──
+  // Clawd（クロード君）— 相談欄のマスコット
+  const CLAWD_SVG=`<svg viewBox="0 0 12 8" width="60" height="40" shape-rendering="crispEdges" style="display:block;margin:0 auto 8px;"><rect x="2" y="0" width="8" height="1" fill="#D77655"/><rect x="2" y="1" width="1" height="1" fill="#D77655"/><rect x="3" y="1" width="1" height="1" fill="#1A1A1A"/><rect x="4" y="1" width="4" height="1" fill="#D77655"/><rect x="8" y="1" width="1" height="1" fill="#1A1A1A"/><rect x="9" y="1" width="1" height="1" fill="#D77655"/><rect x="0" y="2" width="12" height="1" fill="#D77655"/><rect x="0" y="3" width="12" height="1" fill="#D77655"/><rect x="2" y="4" width="8" height="1" fill="#D77655"/><rect x="2" y="5" width="8" height="1" fill="#D77655"/><rect x="2" y="6" width="1" height="1" fill="#D77655"/><rect x="4" y="6" width="1" height="1" fill="#D77655"/><rect x="7" y="6" width="1" height="1" fill="#D77655"/><rect x="9" y="6" width="1" height="1" fill="#D77655"/><rect x="2" y="7" width="1" height="1" fill="#D77655"/><rect x="4" y="7" width="1" height="1" fill="#D77655"/><rect x="7" y="7" width="1" height="1" fill="#D77655"/><rect x="9" y="7" width="1" height="1" fill="#D77655"/></svg>`;
   function renderChatLog(d){
     const log=document.getElementById('chatLog');if(!log) return;
     const chat=(d&&d.chat)||[];
     if(!chat.length){
-      log.innerHTML='<div class="chat-empty">設問について話しかけてみてください。<br>例:「このエピソードで書きたい」「もっと簡潔に」</div>';
+      log.innerHTML='<div class="chat-empty">'+CLAWD_SVG+'</div>';
       return;
     }
     log.innerHTML=chat.map(m=>`<div class="chat-msg ${m.role==='user'?'user':'ai'}">${escHtml(m.content)}</div>`).join('');
@@ -1535,7 +1582,7 @@
   function updateChatPreview(d){
     const pv=document.getElementById('chatPreview');if(!pv) return;
     const n=((d&&d.chat)||[]).length;
-    pv.textContent=n?`${n}件のやりとり`:'クリックして開く';
+    pv.textContent=n?`${n}件`:'';
   }
   async function sendChat(){
     const q=activeQuestion();if(!q) return;
@@ -1559,7 +1606,7 @@
     const company=((activeCompany()||{}).name||'').trim();
     const cur=(d.text||'').trim();
     const mats=(materials||[]).map(m=>`【${m.cat}】${(m.title||'').trim()}\n${(m.text||'').trim()}`).filter(s=>s.trim()).join('\n\n');
-    // ※ 将来「添削ガイドライン」を育てたら、この system の末尾に注入して賢くしていく
+    // 添削ガイドライン（ユーザーがAIガイドで育てる方針）を guidelineBlock() で system 末尾に注入＝全AI機能が賢くなる
     const system=
 `あなたは就活生に伴走するES作成パートナーです。応募者と対話しながら、設問の解答を一緒に作り上げます。
 進め方:
@@ -1574,7 +1621,7 @@
 【素材庫】
 ${mats||'(空)'}
 【現在の草案】
-${cur||'(まだ空)'}`;
+${cur||'(まだ空)'}`+guidelineBlock();
     const history=d.chat.slice(0,aiIdx).map(m=>({role:m.role,content:m.content}));
 
     try{
@@ -1601,7 +1648,7 @@ ${cur||'(まだ空)'}`;
     const d=activeDraftForQ(q);if(!d) return;
     if(typeof currentUser==='undefined'||!currentUser){alert('ログインが必要です。');return;}
     const chat=(d.chat||[]);
-    if(!chat.length){alert('まずAIと相談してから反映してください。');return;}
+    if(!chat.length){alert('会話がまだありません。');return;}
 
     const applyBtn=document.getElementById('chatApply');
     if(applyBtn&&applyBtn.disabled) return;
@@ -1615,7 +1662,7 @@ ${cur||'(まだ空)'}`;
 `あなたは就活のES作成の専門家です。これまでの応募者との会話を踏まえ、設問の解答を完成させます。
 - 会話で出た応募者の実体験・事実だけを使い、捏造しない。
 - 結論ファースト。設問に正面から答える。文字数制限があれば必ず収める。
-- 出力は完成したES本文のみ。前置き・解説・記号囲みは付けない。`;
+- 出力は完成したES本文のみ。前置き・解説・記号囲みは付けない。`+guidelineBlock();
     const convo=chat.map(m=>`${m.role==='user'?'応募者':'AI'}: ${m.content}`).join('\n');
     const user=
 `【企業】${company||'(未設定)'}\n【設問】${label||'(未入力)'}\n【文字数】${limitLine}\n\n【これまでの会話】\n${convo}\n\n上記を踏まえ、設問の解答（本文のみ）を完成させてください。`;
@@ -1790,7 +1837,47 @@ ${cur||'(まだ空)'}`;
   function openMaterialModal(){renderMaterials();document.getElementById('materialBg').classList.add('open');}
   function closeMaterialModal(){document.getElementById('materialBg').classList.remove('open');}
 
+  // ── AIガイド（育てられる方針。全AI機能の system に注入される）──
+  function openGuideModal(){
+    document.getElementById('guideText').value=guidelines||'';
+    document.getElementById('guideBg').classList.add('open');
+    setTimeout(()=>{const el=document.getElementById('guideText');if(el) el.focus();},50);
+  }
+  function closeGuideModal(){document.getElementById('guideBg').classList.remove('open');}
+  function saveGuide(){
+    guidelines=document.getElementById('guideText').value;
+    scheduleSave();
+    closeGuideModal();
+  }
+  const GUIDE_TEMPLATE=`【全体方針】
+・結論ファースト（最初の1文で問いに答える）
+・抽象語より、具体的な行動・役割・数字
+・最後に「学んだこと／活かし方」を一言
+・誇張・捏造はしない。素材庫の事実だけを使う
+・指定文字数の9割以上を目安に収める
+
+【文体】
+・一文を短く、主語と述語を近く
+・専門用語や社内用語は避け、誰でも分かる言葉で
+
+【お手本（あれば貼る）】
+（自分で「これは良い」と思ったES本文を貼ると、文体が寄ります）`;
+
   document.getElementById('btnMaterial').addEventListener('click',openMaterialModal);
+  document.getElementById('btnGuide').addEventListener('click',openGuideModal);
+  document.getElementById('guideClose').addEventListener('click',closeGuideModal);
+  document.getElementById('guideCancel').addEventListener('click',closeGuideModal);
+  document.getElementById('guideSave').addEventListener('click',saveGuide);
+  document.getElementById('guideTemplate').addEventListener('click',()=>{
+    const t=document.getElementById('guideText');
+    t.value=t.value.trim()?t.value.trim()+'\n\n'+GUIDE_TEMPLATE:GUIDE_TEMPLATE;
+    t.focus();
+  });
+  document.getElementById('guideBg').addEventListener('click',e=>{if(e.target===document.getElementById('guideBg')) closeGuideModal();});
+  document.getElementById('usageChip').addEventListener('click',()=>{
+    const usd=aiUsage.inputTokens/1e6*5 + aiUsage.outputTokens/1e6*25;
+    alert(`Claude 使用量（このアプリ導入後の概算）\n\n入力トークン: ${aiUsage.inputTokens.toLocaleString()}\n出力トークン: ${aiUsage.outputTokens.toLocaleString()}\n呼び出し回数: ${aiUsage.calls}\n\n概算コスト: $${usd.toFixed(4)}（≈¥${Math.round(usd*155)}）\n\n※ 公開単価（入力 $5 / 出力 $25 per 1M トークン）× トークン数の概算です。正確な請求額は Anthropic コンソール（console.anthropic.com）で確認してください。`);
+  });
   document.getElementById('materialClose').addEventListener('click',closeMaterialModal);
   document.getElementById('materialBg').addEventListener('click',e=>{if(e.target===document.getElementById('materialBg')) closeMaterialModal();});
 
@@ -1849,6 +1936,21 @@ ${cur||'(まだ空)'}`;
 
   // ── Claude AI 連携（全AI機能の共通入口。Phase 0 以降ずっと使う）──
   const AI_ENDPOINT = "https://asia-northeast1-escounter-d9db7.cloudfunctions.net/ai";
+  // ── Claude 使用量（各呼び出しの usage を累計し、公開単価で概算表示）──
+  function recordUsage(u){
+    if(!u) return;
+    aiUsage.inputTokens += (u.input_tokens||0)+(u.cache_read_input_tokens||0)+(u.cache_creation_input_tokens||0);
+    aiUsage.outputTokens += (u.output_tokens||0);
+    aiUsage.calls += 1;
+    renderUsage();
+    scheduleSave();
+  }
+  function renderUsage(){
+    const el=document.getElementById('usageChip'); if(!el) return;
+    const usd=aiUsage.inputTokens/1e6*5 + aiUsage.outputTokens/1e6*25;
+    el.textContent='≈$'+usd.toFixed(3);
+    el.title=`Claude 使用量（このアプリでの概算）\n入力 ${aiUsage.inputTokens.toLocaleString()} / 出力 ${aiUsage.outputTokens.toLocaleString()} トークン・${aiUsage.calls} 回\n概算 $${usd.toFixed(4)}（≈¥${Math.round(usd*155)}）\n※公開単価×概算。正確な請求は Anthropic コンソール`;
+  }
   async function callAI({ system, messages, maxTokens, onDelta }){
     const token = await currentUser.getIdToken();
     const res = await fetch(AI_ENDPOINT, {
@@ -1868,6 +1970,7 @@ ${cur||'(まだ空)'}`;
         const e=JSON.parse(line);
         if(e.delta){ full+=e.delta; if(onDelta) onDelta(e.delta, full); }
         if(e.error) throw new Error(e.error);
+        if(e.usage) recordUsage(e.usage);
       }
     }
     return full;
