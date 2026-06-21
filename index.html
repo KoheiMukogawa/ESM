@@ -310,6 +310,18 @@
     .memo-body.open{display:block;}
     .memo-textarea{display:block;width:100%;background:var(--surface2);border:none;outline:none;resize:none;padding:12px 22px;color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;min-height:80px;border-top:1px solid var(--border);overflow:hidden;box-sizing:border-box;}
     .memo-textarea::placeholder{color:var(--text3);}
+    /* ── AI相談チャット（メモと同じアコーディオンの上に構築）── */
+    .chat-log{display:flex;flex-direction:column;gap:8px;padding:12px 22px;background:var(--surface2);border-top:1px solid var(--border);max-height:340px;overflow-y:auto;}
+    .chat-empty{font-size:12px;color:var(--text3);text-align:center;line-height:1.7;padding:10px 0;}
+    .chat-msg{font-size:13px;line-height:1.7;padding:8px 12px;border-radius:10px;max-width:88%;white-space:pre-wrap;word-break:break-word;}
+    .chat-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px;}
+    .chat-msg.ai{align-self:flex-start;background:var(--surface);color:var(--text2);border:1px solid var(--border);border-bottom-left-radius:3px;}
+    .chat-input-row{display:flex;align-items:flex-end;gap:8px;padding:10px 22px;background:var(--surface2);}
+    .chat-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;outline:none;resize:none;padding:8px 10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.6;max-height:120px;overflow-y:auto;box-sizing:border-box;}
+    .chat-input::placeholder{color:var(--text3);}
+    .chat-send{flex-shrink:0;height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:opacity .15s;}
+    .chat-send:disabled{opacity:.5;cursor:default;}
+    .chat-actions{display:flex;justify-content:flex-end;padding:0 22px 12px;background:var(--surface2);}
 
     /* ── 素材庫 modal ── */
     #materialBg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;}
@@ -1144,6 +1156,23 @@
           <textarea class="memo-textarea" id="memoText" placeholder="作戦メモ、使うエピソード、修正点など自由に..."></textarea>
         </div>
       </div>
+      <div class="memo-accordion">
+        <div class="memo-toggle" id="chatToggle">
+          <span class="memo-toggle-icon">▶</span>
+          <span class="memo-toggle-label">💬 AIと相談</span>
+          <span class="memo-toggle-preview" id="chatPreview">クリックして開く</span>
+        </div>
+        <div class="memo-body" id="chatBody">
+          <div class="chat-log" id="chatLog"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chatInput" rows="1" placeholder="例: 部活のエピソードで書きたい / もっと簡潔に / 結論を強く"></textarea>
+            <button class="chat-send" id="chatSend">送信</button>
+          </div>
+          <div class="chat-actions">
+            <button class="btn-draft ai" id="chatApply" title="ここまでの会話を踏まえ、設問の解答を完成して今の草案に反映します">この会話を草案に反映</button>
+          </div>
+        </div>
+      </div>
       <div class="q-footer">
         <div class="counter-display">
           <span class="counter-current" id="cardCurrent">0</span>
@@ -1327,6 +1356,21 @@
       autoResizeMemo();
       scheduleSave();
     });
+    // chat（AIと相談）
+    const chatToggle=card.querySelector('#chatToggle');
+    const chatBody=card.querySelector('#chatBody');
+    const chatInput=card.querySelector('#chatInput');
+    renderChatLog(activeDraft);
+    updateChatPreview(activeDraft);
+    chatToggle.addEventListener('click',()=>{
+      const isOpen=chatBody.classList.toggle('open');
+      chatToggle.classList.toggle('open',isOpen);
+      if(isOpen) setTimeout(()=>{const log=card.querySelector('#chatLog');if(log) log.scrollTop=log.scrollHeight;chatInput.focus();},50);
+    });
+    chatInput.addEventListener('input',()=>{chatInput.style.height='auto';chatInput.style.height=Math.min(120,chatInput.scrollHeight)+'px';});
+    chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+    card.querySelector('#chatSend').addEventListener('click',sendChat);
+    card.querySelector('#chatApply').addEventListener('click',applyChat);
   }
   function updateMemoPreview(el,text){
     el.textContent=text?text.replace(/\n/g,' '):'クリックして開く';
@@ -1473,6 +1517,129 @@
         b.disabled=false;
         b.textContent=(cur&&(cur.text||'').trim())?'✨ 添削':'✨ 下書き';
       }
+      renderSidebar();scheduleSave();
+    }
+  }
+
+  // ── AIと相談（Phase 2 ①：自分史チャット。対話で内容を固め、[反映]で草案に書き戻す）──
+  function renderChatLog(d){
+    const log=document.getElementById('chatLog');if(!log) return;
+    const chat=(d&&d.chat)||[];
+    if(!chat.length){
+      log.innerHTML='<div class="chat-empty">設問について話しかけてみてください。<br>例:「このエピソードで書きたい」「もっと簡潔に」</div>';
+      return;
+    }
+    log.innerHTML=chat.map(m=>`<div class="chat-msg ${m.role==='user'?'user':'ai'}">${escHtml(m.content)}</div>`).join('');
+    log.scrollTop=log.scrollHeight;
+  }
+  function updateChatPreview(d){
+    const pv=document.getElementById('chatPreview');if(!pv) return;
+    const n=((d&&d.chat)||[]).length;
+    pv.textContent=n?`${n}件のやりとり`:'クリックして開く';
+  }
+  async function sendChat(){
+    const q=activeQuestion();if(!q) return;
+    const d=activeDraftForQ(q);if(!d) return;
+    if(typeof currentUser==='undefined'||!currentUser){alert('ログインが必要です。');return;}
+    const input=document.getElementById('chatInput');const sendBtn=document.getElementById('chatSend');
+    if(!input) return;
+    const msg=input.value.trim();if(!msg) return;
+    if(sendBtn&&sendBtn.disabled) return;
+
+    if(!d.chat) d.chat=[];
+    d.chat.push({role:'user',content:msg});
+    d.chat.push({role:'assistant',content:''});           // ストリーミング用プレースホルダ
+    const aiIdx=d.chat.length-1;
+    input.value='';input.style.height='auto';
+    renderChatLog(d);
+    if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='…';}
+
+    const label=(q.label||'').trim();
+    const limit=q.limit||0;
+    const company=((activeCompany()||{}).name||'').trim();
+    const cur=(d.text||'').trim();
+    const mats=(materials||[]).map(m=>`【${m.cat}】${(m.title||'').trim()}\n${(m.text||'').trim()}`).filter(s=>s.trim()).join('\n\n');
+    // ※ 将来「添削ガイドライン」を育てたら、この system の末尾に注入して賢くしていく
+    const system=
+`あなたは就活生に伴走するES作成パートナーです。応募者と対話しながら、設問の解答を一緒に作り上げます。
+進め方:
+- 足りない情報は短い質問で引き出す（経験・役割・課題・行動・結果・学び）。一度に質問攻めにしない。
+- 応募者が語った実体験・事実と素材庫だけを使い、捏造しない。
+- 必要なら短い文章案を出し、反応を見て調整する。結論ファースト、設問に正面から、文字数を意識。
+- 返答は簡潔に、対話のテンポを保つ。完成稿は「草案に反映」で別途まとめるので、ここでは作り込みすぎない。
+
+【企業】${company||'(未設定)'}
+【設問】${label||'(未入力)'}
+【文字数】${limit>0?limit+'字以内':'指定なし'}
+【素材庫】
+${mats||'(空)'}
+【現在の草案】
+${cur||'(まだ空)'}`;
+    const history=d.chat.slice(0,aiIdx).map(m=>({role:m.role,content:m.content}));
+
+    try{
+      await callAI({
+        system,messages:history,maxTokens:1500,
+        onDelta:(_,full)=>{
+          if(d.chat[aiIdx]) d.chat[aiIdx].content=full;
+          if(activeQuestion()===q && activeDraftForQ(q)===d){
+            const log=document.getElementById('chatLog');
+            if(log){const bs=log.querySelectorAll('.chat-msg.ai');const last=bs[bs.length-1];if(last){last.textContent=full;log.scrollTop=log.scrollHeight;}else renderChatLog(d);}
+          }
+        }
+      });
+    }catch(e){
+      if(d.chat[aiIdx]&&!d.chat[aiIdx].content){d.chat[aiIdx].content='（エラー: '+((e&&e.message)||e)+'）';renderChatLog(d);}
+      else alert('送信に失敗しました: '+((e&&e.message)||e));
+    }finally{
+      const b=document.getElementById('chatSend');if(b){b.disabled=false;b.textContent='送信';}
+      updateChatPreview(d);scheduleSave();
+    }
+  }
+  async function applyChat(){
+    const q=activeQuestion();if(!q) return;
+    const d=activeDraftForQ(q);if(!d) return;
+    if(typeof currentUser==='undefined'||!currentUser){alert('ログインが必要です。');return;}
+    const chat=(d.chat||[]);
+    if(!chat.length){alert('まずAIと相談してから反映してください。');return;}
+
+    const applyBtn=document.getElementById('chatApply');
+    if(applyBtn&&applyBtn.disabled) return;
+    if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='反映中…';}
+
+    const label=(q.label||'').trim();
+    const limit=q.limit||0;
+    const limitLine=limit>0?`${limit}字以内（必ず収める）`:'指定なし';
+    const company=((activeCompany()||{}).name||'').trim();
+    const system=
+`あなたは就活のES作成の専門家です。これまでの応募者との会話を踏まえ、設問の解答を完成させます。
+- 会話で出た応募者の実体験・事実だけを使い、捏造しない。
+- 結論ファースト。設問に正面から答える。文字数制限があれば必ず収める。
+- 出力は完成したES本文のみ。前置き・解説・記号囲みは付けない。`;
+    const convo=chat.map(m=>`${m.role==='user'?'応募者':'AI'}: ${m.content}`).join('\n');
+    const user=
+`【企業】${company||'(未設定)'}\n【設問】${label||'(未入力)'}\n【文字数】${limitLine}\n\n【これまでの会話】\n${convo}\n\n上記を踏まえ、設問の解答（本文のみ）を完成させてください。`;
+
+    const ta=document.getElementById('cardText');
+    const card=ta?ta.closest('.question-card'):null;
+    try{
+      await callAI({
+        system,messages:[{role:'user',content:user}],
+        maxTokens:Math.min(6000,Math.max(2000,limit*3)),
+        onDelta:(_,full)=>{
+          d.text=full;
+          if(activeQuestion()===q && activeDraftForQ(q)===d && ta){
+            ta.value=full;ta.style.height='auto';ta.style.height=Math.max(220,ta.scrollHeight)+'px';
+            if(card) updateCounter(card,q);
+          }
+        }
+      });
+    }catch(e){
+      alert('反映に失敗しました: '+((e&&e.message)||e));
+    }finally{
+      const b=document.getElementById('chatApply');if(b){b.disabled=false;b.textContent='この会話を草案に反映';}
+      const rb=document.getElementById('btnDraftRefine');
+      if(rb&&!rb.disabled){const cur=activeDraftForQ(q);rb.textContent=(cur&&(cur.text||'').trim())?'✨ 添削':'✨ 下書き';}
       renderSidebar();scheduleSave();
     }
   }
