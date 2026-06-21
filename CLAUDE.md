@@ -1,0 +1,53 @@
+# CLAUDE.md — ESM (ES Manager)
+
+このファイルは Claude Code が自動で読み込むプロジェクト指針です。アーキテクチャが変わったら必ず更新してください。作業履歴は `PROGRESS.md` を参照。
+
+## プロジェクト概要
+ESM（ES Manager）= 就活のエントリーシート(ES)を一元管理する個人用Webアプリ。広告だらけで集中できない既存サービスへの不満から自作。利用者は作者本人＋弟（2026年前半に就活開始、実ユーザー）の2名。
+
+## 北極星と設計原則（非交渉 — 新機能の採否はこれで判断）
+北極星：**「就活のすべてを、集中を奪わずに、1つで。」** 拡張は手段、集中とシンプルが目的。
+
+1. 集中できるUI（広告なし・余計なものを置かない）
+2. データを失わない（クラウド＋ローカルバックアップ）
+3. どんな端末でも開ける（マルチデバイス）
+4. シンプル・余計な機能を作らない
+
+核心の緊張：「1つで完結（拡張）」と「シンプル（抑制）」は引っ張り合う。放置すると本人が嫌った"集中を奪うアプリ"に化ける。新機能は必ずこう問う——**「就活ワークフローの実在する摩擦を消すか？ それとも機能のための機能か？」**。AIは“貼り付けた別機能”にせず、既存の素材庫・草案の導線に自然に溶け込ませる（足したと気づかないくらいに）。
+
+## アーキテクチャ
+- **フロント**：`index.html` 単一ファイルにHTML/CSS/JSを全内包（約1600行・バニラJS・ビルドツールなし）。`landing.html` は別のランディングページ。
+- **ホスティング**：GitHub Pages、`main` ブランチから配信。本番 = https://koheimukogawa.github.io/ESM/ 。
+  - ⚠️ GitHub Pages（無料プラン）は **publicリポジトリ必須**。非公開化するとサイトが落ちる（Firebase Hosting に移行する場合を除く）。
+- **認証**：Firebase Auth（Googleログイン）。Firebaseプロジェクト = `escounter-d9db7`。
+- **DB**：Firestore。データモデルは `users/{uid}` の **1ドキュメント**（companies→questions→drafts＝草案／materials＝素材庫: 自分史・ガクチカ・自己PR・志望動機の軸・その他）。ローカルに5世代バックアップ。
+- **AIバックエンド**：Cloud Functions for Firebase（2nd gen / Node20）。関数 `ai`（asia-northeast1）が「Firebase IDトークン検証 → Claude API へ SSE ストリーミング中継」する**薄いプロキシ**。ソースは `functions/`。
+  - URL: `https://asia-northeast1-escounter-d9db7.cloudfunctions.net/ai`（`index.html` の `AI_ENDPOINT` と一致）。
+  - フロントの共通入口は `index.html` の `callAI({system, messages, maxTokens, onDelta})`。**全AI機能はここを通す。**
+  - 既定モデル：`claude-opus-4-8`。
+
+## セキュリティモデル（重要）
+- **Claude APIキー（sk-ant-…）は本物の秘密** → Google Secret Manager に格納（`ANTHROPIC_API_KEY`）。フロントにもリポジトリにも**絶対に置かない**。新しいキー版を作ったら**再デプロイで反映**。
+- **Firebaseの apiKey は秘密ではない**（公開してよい識別子）。`index.html` にあってOK。
+- **アクセス制御**：`functions/index.js` の `ALLOWED_UIDS` で許可ユーザーを本人＋弟の2 UIDに限定。空にすると「ログインできる全員が作者の課金でClaudeを叩ける」ので注意。
+- **CORS**：`https://koheimukogawa.github.io` ＋ `localhost:8000/5500` のみ許可。
+- **Firestoreルール**：`users/{userId}` を `request.auth != null && request.auth.uid == userId` で本人のみ read/write（テストモードではない・安全）。コンソール管理（リポジトリ未管理）。将来サブコレクション化するならルール拡張が必要。
+
+## 開発ワークフロー
+- **ローカル確認**：`python3 -m http.server 8000 --directory <repo>` → http://localhost:8000/ 。:8000 はCORS許可済み。Firebase Auth は `localhost` を既定で許可ドメインとして扱う。
+- **Functionsデプロイ**：`firebase deploy --only functions`（要 `firebase login`＋Blazeプラン）。
+  - 初回や久々のデプロイで `iam.serviceaccounts.actAs` の **403** が出たら、IAM伝播待ちの一過性。**1〜2分待って再実行**で通る。
+- **シークレット設定**：`firebase functions:secrets:set ANTHROPIC_API_KEY`。**対話式なので実ターミナルで**（`!`経由や非対話シェルは「Cannot run in non-interactive mode」で失敗）。値は**1行・余分な改行や“…”を含めない**（混入すると `not a legal HTTP header value` で失敗する）。
+- **git**：remoteはHTTPS。push は classic PAT 認証で**実ターミナルから** `git push`。`main` が本番なので **push＝本番反映** に直結する点に注意。
+- **コスト**：Opus 4.8 = 入力$5/出力$25 per 1M tokens。個人利用なら1操作あたり数円〜。Anthropicのクレジットは前払い（Firebaseの課金とは別アカウント・別請求）。
+
+## コーディング規約
+- 既存スタイルに合わせる：バニラHTML/CSS/JS、ビルド工程なし、`index.html` 1ファイル主義。フロントにフレームワークやnpm依存を足さない。
+- UI文言・コメントは日本語。
+- 余計な抽象化・機能追加をしない（設計原則4）。AI機能は `callAI()` に集約し、既存の草案編集／素材庫の導線に溶け込ませる。
+
+## 段階計画（現在地）
+- **Phase 0（プロキシ疎通）= ✅ 完了**（2026-06-20）。詳細は `PROGRESS.md`。
+- **次：Phase 1 = ③添削** — 既存の草案編集に `callAI()` を薄く乗せる（最軽量）。
+- Phase 2：①自分史チャット ＋ ②3通り生成（素材庫・草案を活用）。
+- Phase 3：④企業提案（Web検索ツールで根拠付け・"参考提案"に留める。LLMの記憶だけの断定は知識カットオフ＆ハルシネーションで危険）。
