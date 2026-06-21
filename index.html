@@ -104,6 +104,8 @@
     .user-dropdown-info{display:flex;flex-direction:column;gap:3px;padding-bottom:10px;border-bottom:1px solid var(--border);}
     .user-dropdown-name{font-size:13px;font-weight:600;color:var(--text);}
     .user-dropdown-email{font-size:11px;color:var(--text3);word-break:break-all;}
+    .menu-item{font-size:12px;padding:7px 10px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--text2);cursor:pointer;transition:all .15s;text-align:left;}
+    .menu-item:hover{border-color:var(--accent);color:var(--accent);}
     .btn-help{font-size:13px;width:28px;height:28px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
     .btn-help:hover{border-color:var(--accent);color:var(--accent);}
     .btn-logout{font-size:12px;padding:7px 10px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--text3);cursor:pointer;transition:all .15s;text-align:center;}
@@ -468,12 +470,12 @@
               <span class="user-dropdown-name" id="userDisplayName"></span>
               <span class="user-dropdown-email" id="userEmail"></span>
             </div>
+            <button class="menu-item" id="btnMaterial">📚 素材庫</button>
+            <button class="menu-item" id="btnGuide">📝 Claudeへの指示</button>
+            <button class="menu-item" id="btnHelp">？ 使い方</button>
             <button class="btn-logout" id="btnLogout">ログアウト</button>
           </div>
         </div>
-        <button class="btn-material" id="btnMaterial">📚 素材庫</button>
-        <button class="btn-material" id="btnGuide" title="Claudeに、あなたの添削・ES作成の方針を教える（チャット・添削・下書き すべてに効きます）">🎓 Claudeに教える</button>
-        <button class="btn-help" id="btnHelp" title="使い方">?</button>
       </div>
     </div>
     <div class="company-tabs" id="companyTabs">
@@ -552,21 +554,20 @@
   </div>
 </div>
 
-<!-- ── AIガイド Modal ── -->
+<!-- ── Claudeへの指示 Modal ── -->
 <div class="modal-bg" id="guideBg">
   <div class="modal" style="max-width:560px;">
     <div class="modal-head">
-      <h2>🎓 Claudeに教える</h2>
+      <h2>📝 Claudeへの指示</h2>
       <button class="modal-close" id="guideClose">×</button>
     </div>
     <div class="modal-body">
       <div class="modal-field">
-        <label class="modal-label">方針・お手本（Claudeが全機能で守ります）</label>
-        <textarea class="modal-input" id="guideText" style="min-height:300px;resize:vertical;line-height:1.7;" placeholder="方針・お手本（「ひな形を挿入」も使えます）"></textarea>
+        <label class="modal-label">指示書（添削・下書き・チャットすべてで従います）</label>
+        <textarea class="modal-input" id="guideText" style="min-height:320px;resize:vertical;line-height:1.7;" placeholder="例）&#10;・結論ファースト&#10;・必ず数字を入れる&#10;・専門用語は避ける&#10;・誇張や捏造はしない"></textarea>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn-cancel" id="guideTemplate" style="margin-right:auto;">ひな形を挿入</button>
       <button class="btn-cancel" id="guideCancel">閉じる</button>
       <button class="btn-primary" id="guideSave">保存</button>
     </div>
@@ -1168,8 +1169,8 @@
         <div class="draft-pills" id="draftPills"></div>
         <div class="draft-actions">
           <button class="btn-draft" id="btnDraftAdd">＋ 追加</button>
-          <button class="btn-draft" id="btnDraftDupe">複製</button>
           <button class="btn-draft ai" id="btnDraftRefine" title="添削／下書き（Claude）"></button>
+          <button class="btn-draft" id="btnAngles" title="書く切り口の候補をClaudeに3つ出してもらう">切り口</button>
         </div>
       </div>
       <div class="q-textarea-wrap">
@@ -1287,8 +1288,8 @@
       });
     });
     card.querySelector('#btnDraftAdd').addEventListener('click',addDraft);
-    card.querySelector('#btnDraftDupe').addEventListener('click',dupeDraft);
     card.querySelector('#btnDraftRefine').addEventListener('click',refineDraft);
+    card.querySelector('#btnAngles').addEventListener('click',genAngles);
     card.querySelector('#btnDone').addEventListener('click',()=>{
       const q=activeQuestion();if(!q) return;
       const d=activeDraftForQ(q);if(!d) return;
@@ -1452,13 +1453,6 @@
     setTimeout(()=>{const el=document.getElementById('cardText');if(el) el.focus();},50);
   }
   function closeAddDraftModal(){document.getElementById('addDraftBg').classList.remove('open');}
-  function dupeDraft(){
-    const q=activeQuestion();if(!q) return;
-    const d=activeDraftForQ(q);if(!d) return;
-    const id=genId();
-    q.drafts.push({id,name:d.name+'（複製）',text:d.text,done:false,memo:d.memo||''});
-    q.activeDraftId=id;render();scheduleSave();
-  }
 
   // ── AI下書き / 添削（Phase 1。空→Phase2の生成への橋渡し）──
   //   草案が空   → 素材庫をもとに「下書き(たたき台)」を今の草案に生成（捏造しない）
@@ -1565,6 +1559,16 @@
       }
       renderSidebar();scheduleSave();
     }
+  }
+
+  // ── 切り口提案（Phase 2②・軽量版）：白紙の摩擦だけ解く。3つの切り口をチャットに出し、続きは会話で育てる ──
+  async function genAngles(){
+    const q=activeQuestion();if(!q) return;
+    const input=document.getElementById('chatInput'); if(!input) return;
+    const chatBody=document.getElementById('chatBody'),chatToggle=document.getElementById('chatToggle');
+    if(chatBody&&!chatBody.classList.contains('open')){chatBody.classList.add('open');if(chatToggle)chatToggle.classList.add('open');}
+    input.value='書く切り口（方向性）の候補を3つ、それぞれ短く挙げて。気に入ったものを会話で深めます。';
+    sendChat();
   }
 
   // ── AIと相談（Phase 2 ①：自分史チャット。対話で内容を固め、[反映]で草案に書き戻す）──
@@ -1852,30 +1856,12 @@ ${cur||'(まだ空)'}`+guidelineBlock();
     scheduleSave();
     closeGuideModal();
   }
-  const GUIDE_TEMPLATE=`【全体方針】
-・結論ファースト（最初の1文で問いに答える）
-・抽象語より、具体的な行動・役割・数字
-・最後に「学んだこと／活かし方」を一言
-・誇張・捏造はしない。素材庫の事実だけを使う
-・指定文字数の9割以上を目安に収める
-
-【文体】
-・一文を短く、主語と述語を近く
-・専門用語や社内用語は避け、誰でも分かる言葉で
-
-【お手本（あれば貼る）】
-（自分で「これは良い」と思ったES本文を貼ると、文体が寄ります）`;
 
   document.getElementById('btnMaterial').addEventListener('click',openMaterialModal);
   document.getElementById('btnGuide').addEventListener('click',openGuideModal);
   document.getElementById('guideClose').addEventListener('click',closeGuideModal);
   document.getElementById('guideCancel').addEventListener('click',closeGuideModal);
   document.getElementById('guideSave').addEventListener('click',saveGuide);
-  document.getElementById('guideTemplate').addEventListener('click',()=>{
-    const t=document.getElementById('guideText');
-    t.value=t.value.trim()?t.value.trim()+'\n\n'+GUIDE_TEMPLATE:GUIDE_TEMPLATE;
-    t.focus();
-  });
   document.getElementById('guideBg').addEventListener('click',e=>{if(e.target===document.getElementById('guideBg')) closeGuideModal();});
   document.getElementById('usageChip').addEventListener('click',()=>{
     const usd=aiUsage.inputTokens/1e6*5 + aiUsage.outputTokens/1e6*25;
