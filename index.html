@@ -233,7 +233,8 @@
     .draft-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0;}
     .btn-draft{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;}
     .btn-draft:hover{border-color:var(--accent);color:var(--accent);}
-    .btn-draft.ai{color:var(--accent);}
+    .btn-draft.ai{color:var(--accent);padding:4px 7px;}
+    .btn-draft.ai:disabled{animation:pulse 1s infinite;}
     .btn-draft:disabled{opacity:.55;cursor:default;border-color:var(--border);color:var(--text3);}
     .q-textarea{display:block;width:100%;background:transparent;border:none;outline:none;resize:none;padding:18px 22px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:calc(14px * var(--textarea-zoom,1));line-height:1.9;min-height:220px;}
     .q-textarea::placeholder{color:var(--text3);}
@@ -1168,7 +1169,7 @@
         <div class="draft-actions">
           <button class="btn-draft" id="btnDraftAdd">＋ 追加</button>
           <button class="btn-draft" id="btnDraftDupe">複製</button>
-          <button class="btn-draft ai" id="btnDraftRefine" title="今の草案をClaudeが推敲し、新しい草案として作ります（元は残ります）">✨ 添削</button>
+          <button class="btn-draft ai" id="btnDraftRefine" title="添削／下書き（Claude）"></button>
         </div>
       </div>
       <div class="q-textarea-wrap">
@@ -1233,7 +1234,7 @@
       const d=activeDraftForQ(q);if(!d) return;
       d.text=e.target.value;updateCounter(card,q);renderSidebar();scheduleSave();
       const rb=card.querySelector('#btnDraftRefine');
-      if(rb&&!rb.disabled) rb.textContent=e.target.value.trim()?'✨ 添削':'✨ 下書き';
+      if(rb&&!rb.disabled) rb.title=e.target.value.trim()?'添削（推敲して新しい草案・元は残す）':'下書き（素材庫をもとに作成）';
     });
     card.querySelector('#cardText').addEventListener('input',function(){
       this.style.height='auto';this.style.height=Math.max(220,this.scrollHeight)+'px';
@@ -1360,8 +1361,8 @@
     const refineBtn=card.querySelector('#btnDraftRefine');
     if(refineBtn){
       const has=!!(d&&(d.text||'').trim());
-      refineBtn.textContent=has?'✨ 添削':'✨ 下書き';
-      refineBtn.title=has?'今の草案をClaudeが推敲し、新しい草案として作ります（元は残ります）':'素材庫をもとに、Claudeが設問の下書き（たたき台）を作ります';
+      refineBtn.innerHTML=CLAWD_ICON;
+      refineBtn.title=has?'添削（推敲して新しい草案・元は残す）':'下書き（素材庫をもとに作成）';
     }
     updateCounter(card,q);
     // memo
@@ -1480,7 +1481,7 @@
     }
 
     const btn=document.getElementById('btnDraftRefine');
-    if(btn){btn.disabled=true;btn.textContent=mode==='refine'?'添削中…':'作成中…';}
+    if(btn){btn.disabled=true;btn.title=mode==='refine'?'添削中…':'作成中…';}
 
     const label=(q.label||'').trim();
     const limit=q.limit||0;
@@ -1560,7 +1561,7 @@
       if(b){
         const cur=activeDraftForQ(q);
         b.disabled=false;
-        b.textContent=(cur&&(cur.text||'').trim())?'✨ 添削':'✨ 下書き';
+        b.title=(cur&&(cur.text||'').trim())?'添削（推敲して新しい草案・元は残す）':'下書き（素材庫をもとに作成）';
       }
       renderSidebar();scheduleSave();
     }
@@ -1569,6 +1570,8 @@
   // ── AIと相談（Phase 2 ①：自分史チャット。対話で内容を固め、[反映]で草案に書き戻す）──
   // Clawd（クロード君）— 相談欄のマスコット
   const CLAWD_SVG=`<svg viewBox="0 0 12 8" width="60" height="40" shape-rendering="crispEdges" style="display:block;margin:0 auto 8px;"><rect x="2" y="0" width="8" height="1" fill="#D77655"/><rect x="2" y="1" width="1" height="1" fill="#D77655"/><rect x="3" y="1" width="1" height="1" fill="#1A1A1A"/><rect x="4" y="1" width="4" height="1" fill="#D77655"/><rect x="8" y="1" width="1" height="1" fill="#1A1A1A"/><rect x="9" y="1" width="1" height="1" fill="#D77655"/><rect x="0" y="2" width="12" height="1" fill="#D77655"/><rect x="0" y="3" width="12" height="1" fill="#D77655"/><rect x="2" y="4" width="8" height="1" fill="#D77655"/><rect x="2" y="5" width="8" height="1" fill="#D77655"/><rect x="2" y="6" width="1" height="1" fill="#D77655"/><rect x="4" y="6" width="1" height="1" fill="#D77655"/><rect x="7" y="6" width="1" height="1" fill="#D77655"/><rect x="9" y="6" width="1" height="1" fill="#D77655"/><rect x="2" y="7" width="1" height="1" fill="#D77655"/><rect x="4" y="7" width="1" height="1" fill="#D77655"/><rect x="7" y="7" width="1" height="1" fill="#D77655"/><rect x="9" y="7" width="1" height="1" fill="#D77655"/></svg>`;
+  // ボタン用の小さいClawd（同じSVGからサイズ違いを生成）
+  const CLAWD_ICON=CLAWD_SVG.replace('width="60" height="40"','width="18" height="12"').replace('display:block;margin:0 auto 8px;','display:block;');
   function renderChatLog(d){
     const log=document.getElementById('chatLog');if(!log) return;
     const chat=(d&&d.chat)||[];
@@ -1686,7 +1689,7 @@ ${cur||'(まだ空)'}`+guidelineBlock();
     }finally{
       const b=document.getElementById('chatApply');if(b){b.disabled=false;b.textContent='この会話を草案に反映';}
       const rb=document.getElementById('btnDraftRefine');
-      if(rb&&!rb.disabled){const cur=activeDraftForQ(q);rb.textContent=(cur&&(cur.text||'').trim())?'✨ 添削':'✨ 下書き';}
+      if(rb&&!rb.disabled){const cur=activeDraftForQ(q);rb.title=(cur&&(cur.text||'').trim())?'添削（推敲して新しい草案・元は残す）':'下書き（素材庫をもとに作成）';}
       renderSidebar();scheduleSave();
     }
   }
