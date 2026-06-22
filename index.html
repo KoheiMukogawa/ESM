@@ -116,13 +116,13 @@
     .zoom-pct{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);padding:0 6px;min-width:38px;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);line-height:24px;}
 
     /* ── Company tabs ── */
-    .company-tabs{display:flex;align-items:center;gap:2px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+    .company-tabs{display:flex;flex-direction:column;gap:1px;padding:4px 0;background:var(--sidebar-bg);border-bottom:1px solid var(--border);max-height:38vh;overflow-y:auto;scrollbar-width:none;flex-shrink:0;}
     .company-tabs::-webkit-scrollbar{display:none;}
-    .ctab{display:flex;align-items:center;gap:5px;padding:9px 14px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none;max-width:200px;flex-shrink:0;}
+    .ctab{display:flex;align-items:center;gap:5px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-left:2px solid transparent;transition:all .15s;user-select:none;}
     .ctab:hover{color:var(--text2);background:rgba(108,143,255,.04);}
-    .ctab.active{color:var(--text);border-bottom-color:var(--accent);max-width:none;}
-    .ctab-name{outline:none;background:transparent;border:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;cursor:pointer;min-width:30px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;}
-    .ctab.active .ctab-name{cursor:text;max-width:none;overflow:visible;text-overflow:clip;}
+    .ctab.active{color:var(--text);border-left-color:var(--accent);background:rgba(108,143,255,.06);}
+    .ctab-name{outline:none;background:transparent;border:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;cursor:pointer;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .ctab.active .ctab-name{cursor:text;}
     .ctab-deadline{font-size:10px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:10px;border:1px solid var(--border);color:var(--text3);flex-shrink:0;white-space:nowrap;}
     .ctab-deadline.warn{color:var(--warn);border-color:var(--warn);background:rgba(251,191,36,.08);}
     .ctab-deadline.danger{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.08);}
@@ -132,12 +132,12 @@
     .ctab.submitted{opacity:.7;}
 
     .ctab.all-done .ctab-name{color:var(--ok);}
-    .ctab.all-done{border-bottom-color:var(--ok)!important;}
+    .ctab.all-done{border-left-color:var(--ok)!important;}
 
     .ctab-close{opacity:0;color:var(--text3);font-size:13px;transition:opacity .15s;flex-shrink:0;}
     .ctab:hover .ctab-close{opacity:1;}
     .ctab-close:hover{color:var(--danger);}
-    .ctab-add{padding:8px 12px;font-size:18px;color:var(--text3);cursor:pointer;border-radius:4px;transition:color .15s;flex-shrink:0;}
+    .ctab-add{padding:8px 14px;font-size:12px;color:var(--text3);cursor:pointer;transition:color .15s;}
     .ctab-add:hover{color:var(--accent);}
 
     /* ── Info panel ── */
@@ -321,11 +321,12 @@
     .chat-msg{font-size:13px;line-height:1.7;padding:8px 12px;border-radius:10px;max-width:88%;white-space:pre-wrap;word-break:break-word;}
     .chat-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px;}
     .chat-msg.ai{align-self:flex-start;background:var(--surface);color:var(--text2);border:1px solid var(--border);border-bottom-left-radius:3px;}
-    .chat-input-row{display:flex;align-items:flex-end;gap:8px;padding:10px 22px;background:var(--surface2);}
-    .chat-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;outline:none;resize:none;padding:8px 10px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.6;max-height:120px;overflow-y:auto;box-sizing:border-box;}
+    .chat-input-row{display:flex;align-items:flex-end;gap:8px;margin:10px 16px;padding:7px 7px 7px 14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;}
+    .chat-input{flex:1;background:transparent;border:none;outline:none;resize:none;padding:6px 0;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;line-height:1.6;max-height:140px;overflow-y:auto;box-sizing:border-box;}
     .chat-input::placeholder{color:var(--text3);}
-    .chat-send{flex-shrink:0;height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:opacity .15s;}
-    .chat-send:disabled{opacity:.5;cursor:default;}
+    .chat-send{flex-shrink:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:none;background:#D97757;color:#fff;cursor:pointer;transition:opacity .15s;}
+    .chat-send:hover{opacity:.88;}
+    .chat-send:disabled{opacity:.4;cursor:default;}
     .chat-actions{display:flex;justify-content:flex-end;padding:0 22px 12px;background:var(--surface2);}
     /* ── 自分史インタビュー modal ── */
     #ivModal{max-width:560px;height:80vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -481,14 +482,15 @@
         </div>
       </div>
     </div>
-    <div class="company-tabs" id="companyTabs">
-      <div class="ctab-add" id="companyAdd" title="企業を追加">＋</div>
-    </div>
-
   </header>
 
   <div class="app-body">
     <div class="sidebar">
+      <div class="sidebar-header">
+        <span>企業</span>
+        <span class="sidebar-add" id="companyAdd" title="企業を追加">＋</span>
+      </div>
+      <div class="company-tabs" id="companyTabs"></div>
       <div class="sidebar-header">
         <span>設問</span>
         <span class="sidebar-add" id="questionAdd" title="設問を追加">＋</span>
@@ -499,7 +501,7 @@
     <div class="main-content" id="mainContent">
       <div class="empty-state" id="emptyState">
         <div class="big">✏️</div>
-        <p id="emptyMsg">上の <strong>＋</strong> で企業を追加してください</p>
+        <p id="emptyMsg">左の <strong>＋ 新規企業</strong> で企業を追加してください</p>
       </div>
     </div>
   </div>
@@ -690,7 +692,7 @@
     <div class="chat-log" id="ivLog"></div>
     <div class="chat-input-row">
       <textarea class="chat-input" id="ivInput" rows="1" placeholder="答えを入力…"></textarea>
-      <button class="chat-send" id="ivSend">送信</button>
+      <button class="chat-send" id="ivSend" title="送信"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
     </div>
     <div class="modal-foot">
       <button class="btn-cancel" id="ivCancel">閉じる</button>
@@ -945,7 +947,6 @@
   function renderCompanyTabs(){
     const bar=document.getElementById('companyTabs');
     bar.querySelectorAll('.ctab').forEach(t=>t.remove());
-    const add=document.getElementById('companyAdd');
     // sort: normal → pass/pending/submitted → fail → expired
     const today=new Date(); today.setHours(0,0,0,0);
     const sortRank=c=>{
@@ -1015,7 +1016,7 @@
         renderCompanyTabs();scheduleSave();
       });
       tab.addEventListener('click',()=>{if(activeCompanyId!==c.id){activeCompanyId=c.id;render();scheduleSave();}});
-      bar.insertBefore(tab,add);
+      bar.appendChild(tab);
     });
   }
 
@@ -1156,7 +1157,7 @@
     const c=activeCompany();
     if(!c){
       empty.style.display='block';
-      document.getElementById('emptyMsg').innerHTML='上の <strong>＋</strong> で企業を追加してください';
+      document.getElementById('emptyMsg').innerHTML='左の <strong>＋ 新規企業</strong> で企業を追加してください';
       const old=area.querySelector('.question-card');if(old) old.remove();return;
     }
     const q=activeQuestion();
@@ -1220,7 +1221,7 @@
           <div class="chat-log" id="chatLog"></div>
           <div class="chat-input-row">
             <textarea class="chat-input" id="chatInput" rows="1" placeholder="相談…"></textarea>
-            <button class="btn-draft" id="chatSend">送信</button>
+            <button class="chat-send" id="chatSend" title="送信"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
           </div>
           <div class="chat-actions">
             <button class="btn-draft ai" id="chatApply" title="ここまでの会話を踏まえ、設問の解答を完成して今の草案に反映します">この会話を草案に反映</button>
@@ -1638,7 +1639,7 @@
     const aiIdx=d.chat.length-1;
     input.value='';input.style.height='auto';
     renderChatLog(d);
-    if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='…';}
+    if(sendBtn) sendBtn.disabled=true;
 
     const label=(q.label||'').trim();
     const limit=q.limit||0;
@@ -1678,7 +1679,7 @@ ${cur||'(まだ空)'}`+guidelineBlock();
       if(d.chat[aiIdx]&&!d.chat[aiIdx].content){d.chat[aiIdx].content='（エラー: '+((e&&e.message)||e)+'）';renderChatLog(d);}
       else alert('送信に失敗しました: '+((e&&e.message)||e));
     }finally{
-      const b=document.getElementById('chatSend');if(b){b.disabled=false;b.textContent='送信';}
+      const b=document.getElementById('chatSend');if(b) b.disabled=false;
       updateChatPreview(d);scheduleSave();
     }
   }
@@ -1918,7 +1919,7 @@ ${cur||'(まだ空)'}`+guidelineBlock();
     const ai=ivChat.length-1;
     input.value='';input.style.height='auto';
     renderIvLog();
-    if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='…';}
+    if(sendBtn) sendBtn.disabled=true;
     const system=
 `あなたは就活生の「自分史」づくりに伴走するインタビュアーです。対話で本人の経験・転機・価値観を引き出します。
 - 一度に1つだけ、答えやすい短い質問をする（打ち込んだこと／転機／挫折と乗り越え／大事にしている価値観 など）。
@@ -1933,7 +1934,7 @@ ${cur||'(まだ空)'}`+guidelineBlock();
       if(ivChat[ai]&&!ivChat[ai].content){ivChat[ai].content='（エラー: '+((e&&e.message)||e)+'）';renderIvLog();}
       else alert('送信に失敗しました: '+((e&&e.message)||e));
     }finally{
-      const b=document.getElementById('ivSend'); if(b){b.disabled=false;b.textContent='送信';}
+      const b=document.getElementById('ivSend'); if(b) b.disabled=false;
     }
   }
   async function ivSave(){
