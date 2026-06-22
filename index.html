@@ -1917,7 +1917,7 @@ ${cur||'(まだ空)'}`+guidelineBlock();
 - 共感は一言まで。質問が主役。テンポよく。
 - 全体像が見えてきたら「だいたい揃いました。右下の『素材庫に保存』で自分史にまとめます」と促す。`+guidelineBlock();
     try{
-      await callAI({system,messages:ivChat.slice(0,ai).map(m=>({role:m.role,content:m.content})),maxTokens:1000,
+      await callAI({system,messages:apiMsgs(ivChat.slice(0,ai)),maxTokens:1000,
         onDelta:(_,f)=>{ if(ivChat[ai]){ivChat[ai].content=f; const log=document.getElementById('ivLog'); if(log){const bs=log.querySelectorAll('.chat-msg.ai');const last=bs[bs.length-1]; if(last){last.textContent=f;log.scrollTop=log.scrollHeight;}else renderIvLog();}} }
       });
     }catch(e){
@@ -1954,6 +1954,9 @@ ${cur||'(まだ空)'}`+guidelineBlock();
       const b=document.getElementById('ivSave'); if(b){b.disabled=false;b.textContent='素材庫に保存';}
     }
   }
+
+  // API送信用：会話の先頭がassistant（あいさつ）なら落として必ずuser始まりにする
+  function apiMsgs(arr){ const a=arr.map(m=>({role:m.role,content:m.content})); while(a.length && a[0].role==='assistant') a.shift(); return a; }
 
   document.getElementById('btnMaterial').addEventListener('click',openMaterialModal);
   document.getElementById('btnGuide').addEventListener('click',openGuideModal);
