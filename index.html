@@ -1547,6 +1547,16 @@
         const mt=document.getElementById('memoText');
         if(mt){mt.value=target.memo;mt.style.height='auto';mt.style.height=mt.scrollHeight+'px';}
       }
+      // 連動：✨の結果をClaude会話にも残し、そのまま対話で続けられるようにする
+      if(!target.chat) target.chat=[];
+      target.chat.push({role:'assistant',content: mode==='refine'
+        ? '✨ 前の草案を添削して、この草案にしました。「もっと簡潔に」「ここを強調」など、続けて相談できます。'
+        : '✨ 素材庫をもとに下書きしました。直したい点や方向性を教えてもらえれば、続けて調整します。'});
+      if(activeQuestion()===q && q.activeDraftId===target.id){
+        renderChatLog(target); updateChatPreview(target);
+        const cb=document.getElementById('chatBody'),ct=document.getElementById('chatToggle');
+        if(cb&&!cb.classList.contains('open')){cb.classList.add('open'); if(ct) ct.classList.add('open');}
+      }
     }catch(e){
       if(mode==='refine' && !target.text){ // 推敲で何も生成されず失敗 → 空の草案を片付けて元に戻す
         const idx=q.drafts.findIndex(x=>x.id===createdId);
@@ -1633,7 +1643,7 @@
 ${mats||'(空)'}
 【現在の草案】
 ${cur||'(まだ空)'}`+guidelineBlock();
-    const history=d.chat.slice(0,aiIdx).map(m=>({role:m.role,content:m.content}));
+    const history=apiMsgs(d.chat.slice(0,aiIdx));
 
     try{
       await callAI({
