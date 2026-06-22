@@ -311,7 +311,6 @@
     .memo-toggle.open .memo-toggle-icon{transform:rotate(90deg);}
     .memo-toggle-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
     .memo-toggle-preview{flex:1;font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .memo-head{padding:9px 22px 2px;background:var(--surface2);}
     .memo-body{display:none;padding:0;}
     .memo-body.open{display:block;}
     .memo-textarea{display:block;width:100%;background:var(--surface2);border:none;outline:none;resize:none;padding:12px 22px;color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;min-height:80px;border-top:1px solid var(--border);overflow:hidden;box-sizing:border-box;}
@@ -1202,8 +1201,14 @@
         <button class="btn-copy" id="btnCopy" title="コピー"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
       </div>
       <div class="memo-accordion">
-        <div class="memo-head"><span class="memo-toggle-label">note</span></div>
-        <textarea class="memo-textarea" id="memoText" placeholder="作戦メモ、使うエピソード、修正点など自由に..."></textarea>
+        <div class="memo-toggle open" id="memoToggle">
+          <span class="memo-toggle-icon">▶</span>
+          <span class="memo-toggle-label">note</span>
+          <span class="memo-toggle-preview" id="memoPreview"></span>
+        </div>
+        <div class="memo-body open" id="memoBody">
+          <textarea class="memo-textarea" id="memoText" placeholder="作戦メモ、使うエピソード、修正点など自由に..."></textarea>
+        </div>
       </div>
       <div class="memo-accordion">
         <div class="memo-toggle" id="chatToggle">
@@ -1384,12 +1389,23 @@
       refineBtn.title=has?'添削（推敲して新しい草案・元は残す）':'下書き（素材庫をもとに作成）';
     }
     updateCounter(card,q);
-    // note（常時表示）
+    // note（既定で開く・折りたたみ可）
     const memoText=card.querySelector('#memoText');
+    const memoToggle=card.querySelector('#memoToggle');
+    const memoBody=card.querySelector('#memoBody');
+    const memoPreview=card.querySelector('#memoPreview');
     const activeDraft=activeDraftForQ(q);
     function autoResizeMemo(){memoText.style.height='auto';memoText.style.height=memoText.scrollHeight+'px';}
+    function setMemoPreview(){memoPreview.textContent=memoBody.classList.contains('open')?'':(memoText.value?memoText.value.replace(/\n/g,' '):'');}
     memoText.value=activeDraft?activeDraft.memo||'':'';
     setTimeout(autoResizeMemo,50);
+    setMemoPreview();
+    memoToggle.addEventListener('click',()=>{
+      const isOpen=memoBody.classList.toggle('open');
+      memoToggle.classList.toggle('open',isOpen);
+      setMemoPreview();
+      if(isOpen) setTimeout(autoResizeMemo,50);
+    });
     memoText.addEventListener('input',()=>{
       const d=activeDraftForQ(q);if(!d) return;
       d.memo=memoText.value;
@@ -1542,10 +1558,12 @@
           }
         }
       });
-      // 添削の変更点をメモ(note)に表示（noteは常時表示）
+      // 添削の変更点をnoteに表示し、折りたたまれていれば開く
       if(mode==='refine' && (target.memo||'').trim() && activeQuestion()===q && q.activeDraftId===target.id){
-        const mt=document.getElementById('memoText');
+        const mt=document.getElementById('memoText'),mb=document.getElementById('memoBody'),mtg=document.getElementById('memoToggle');
         if(mt){mt.value=target.memo;mt.style.height='auto';mt.style.height=mt.scrollHeight+'px';}
+        if(mb&&!mb.classList.contains('open')){mb.classList.add('open');if(mtg)mtg.classList.add('open');}
+        const mp=document.getElementById('memoPreview');if(mp)mp.textContent='';
       }
       // 連動：✨の結果をClaude会話にも残し、そのまま対話で続けられるようにする
       if(!target.chat) target.chat=[];
