@@ -311,6 +311,7 @@
     .memo-toggle.open .memo-toggle-icon{transform:rotate(90deg);}
     .memo-toggle-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
     .memo-toggle-preview{flex:1;font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .memo-head{padding:9px 22px 2px;background:var(--surface2);}
     .memo-body{display:none;padding:0;}
     .memo-body.open{display:block;}
     .memo-textarea{display:block;width:100%;background:var(--surface2);border:none;outline:none;resize:none;padding:12px 22px;color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:13px;line-height:1.8;min-height:80px;border-top:1px solid var(--border);overflow:hidden;box-sizing:border-box;}
@@ -474,7 +475,7 @@
               <span class="user-dropdown-email" id="userEmail"></span>
             </div>
             <button class="menu-item" id="btnMaterial">📚 素材庫</button>
-            <button class="menu-item" id="btnGuide">📝 Claudeへの指示</button>
+            <button class="menu-item" id="btnGuide"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-3px;margin-right:4px"><path d="M12 2.5V21.5M2.5 12H21.5M5.4 5.4 18.6 18.6M18.6 5.4 5.4 18.6" stroke="#D97757" stroke-width="2" stroke-linecap="round"/></svg>Claudeへの指示</button>
             <button class="menu-item" id="btnHelp">？ 使い方</button>
             <button class="btn-logout" id="btnLogout">ログアウト</button>
           </div>
@@ -561,7 +562,7 @@
 <div class="modal-bg" id="guideBg">
   <div class="modal" style="max-width:560px;">
     <div class="modal-head">
-      <h2>📝 Claudeへの指示</h2>
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-3px;margin-right:5px"><path d="M12 2.5V21.5M2.5 12H21.5M5.4 5.4 18.6 18.6M18.6 5.4 5.4 18.6" stroke="#D97757" stroke-width="2" stroke-linecap="round"/></svg>Claudeへの指示</h2>
       <button class="modal-close" id="guideClose">×</button>
     </div>
     <div class="modal-body">
@@ -1201,14 +1202,8 @@
         <button class="btn-copy" id="btnCopy" title="コピー"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
       </div>
       <div class="memo-accordion">
-        <div class="memo-toggle" id="memoToggle">
-          <span class="memo-toggle-icon">▶</span>
-          <span class="memo-toggle-label">メモ</span>
-          <span class="memo-toggle-preview" id="memoPreview">クリックして開く</span>
-        </div>
-        <div class="memo-body" id="memoBody">
-          <textarea class="memo-textarea" id="memoText" placeholder="作戦メモ、使うエピソード、修正点など自由に..."></textarea>
-        </div>
+        <div class="memo-head"><span class="memo-toggle-label">note</span></div>
+        <textarea class="memo-textarea" id="memoText" placeholder="作戦メモ、使うエピソード、修正点など自由に..."></textarea>
       </div>
       <div class="memo-accordion">
         <div class="memo-toggle" id="chatToggle">
@@ -1389,24 +1384,15 @@
       refineBtn.title=has?'添削（推敲して新しい草案・元は残す）':'下書き（素材庫をもとに作成）';
     }
     updateCounter(card,q);
-    // memo
+    // note（常時表示）
     const memoText=card.querySelector('#memoText');
-    const memoToggle=card.querySelector('#memoToggle');
-    const memoBody=card.querySelector('#memoBody');
-    const memoPreview=card.querySelector('#memoPreview');
     const activeDraft=activeDraftForQ(q);
     function autoResizeMemo(){memoText.style.height='auto';memoText.style.height=memoText.scrollHeight+'px';}
     memoText.value=activeDraft?activeDraft.memo||'':'';
-    updateMemoPreview(memoPreview, memoText.value);
-    memoToggle.addEventListener('click',()=>{
-      const isOpen=memoBody.classList.toggle('open');
-      memoToggle.classList.toggle('open',isOpen);
-      if(isOpen) setTimeout(()=>{memoText.focus();autoResizeMemo();},50);
-    });
+    setTimeout(autoResizeMemo,50);
     memoText.addEventListener('input',()=>{
       const d=activeDraftForQ(q);if(!d) return;
       d.memo=memoText.value;
-      updateMemoPreview(memoPreview,memoText.value);
       autoResizeMemo();
       scheduleSave();
     });
@@ -1425,9 +1411,6 @@
     chatInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
     card.querySelector('#chatSend').addEventListener('click',sendChat);
     card.querySelector('#chatApply').addEventListener('click',applyChat);
-  }
-  function updateMemoPreview(el,text){
-    el.textContent=text?text.replace(/\n/g,' '):'クリックして開く';
   }
 
 
@@ -1559,12 +1542,10 @@
           }
         }
       });
-      // 添削の変更点をメモに表示し、自動で開いて「どこをなぜ変えたか」を見せる
+      // 添削の変更点をメモ(note)に表示（noteは常時表示）
       if(mode==='refine' && (target.memo||'').trim() && activeQuestion()===q && q.activeDraftId===target.id){
-        const mt=document.getElementById('memoText'),mp=document.getElementById('memoPreview'),mb=document.getElementById('memoBody'),mtg=document.getElementById('memoToggle');
+        const mt=document.getElementById('memoText');
         if(mt){mt.value=target.memo;mt.style.height='auto';mt.style.height=mt.scrollHeight+'px';}
-        if(mp) updateMemoPreview(mp,target.memo);
-        if(mb&&mtg){mb.classList.add('open');mtg.classList.add('open');}
       }
     }catch(e){
       if(mode==='refine' && !target.text){ // 推敲で何も生成されず失敗 → 空の草案を片付けて元に戻す
