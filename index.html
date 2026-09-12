@@ -400,9 +400,11 @@
     .btn-material{font-size:11px;height:28px;padding:0 12px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
     .btn-material:hover{border-color:var(--accent);color:var(--accent);}
 
-    /* ── 移動モード（本文にカーソルが無い＝矢印で動かせる状態）の目印 ── */
+    /* ── 移動モード（本文にカーソルが無い＝矢印で動かせる状態）の目印 ──
+       枠で囲うと、選択中の行が元から持っている左バー＋背景の上に重なって派手すぎた。
+       常時出るものなので、既存の左バーを内側に少し伸ばすだけに留める（レイアウトはずれない） */
     body.nav-mode .ctree-co.active,
-    body.nav-mode .ctree-q.active{box-shadow:inset 0 0 0 1.5px var(--accent);}
+    body.nav-mode .ctree-q.active{box-shadow:inset 2px 0 0 var(--accent);}
 
     /* ══════════════════════════════════════════════════════════════
        レスポンシブ。他のルールを確実に上書きするため、必ず <style> の末尾に置くこと。
