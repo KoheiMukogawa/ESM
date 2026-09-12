@@ -400,6 +400,10 @@
     .btn-material{font-size:11px;height:28px;padding:0 12px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
     .btn-material:hover{border-color:var(--accent);color:var(--accent);}
 
+    /* ── 移動モード（本文にカーソルが無い＝矢印で動かせる状態）の目印 ── */
+    body.nav-mode .ctree-co.active,
+    body.nav-mode .ctree-q.active{box-shadow:inset 0 0 0 1.5px var(--accent);}
+
     /* ══════════════════════════════════════════════════════════════
        レスポンシブ。他のルールを確実に上書きするため、必ず <style> の末尾に置くこと。
        メディアクエリは詳細度を上げないので、同一詳細度なら後に書いたほうが勝つ
@@ -740,6 +744,17 @@
       </div>
 
       <div class="help-section">
+        <h3>⌨️ キーボードだけで動かす（PC）</h3>
+        <ul>
+          <li>開いた直後は本文にカーソルがあるので、そのまま書き始められる</li>
+          <li><span class="htag">Esc</span> で本文を抜けると「移動モード」。選択中の企業・設問に枠が出る</li>
+          <li>移動モード中は <span class="htag">↑</span> <span class="htag">↓</span> で企業、<span class="htag">←</span> <span class="htag">→</span> で設問を移動（サイドバーの並び順どおり・端で止まる）</li>
+          <li><span class="htag">Enter</span> で本文に戻り、カーソルは文末につく</li>
+          <li><span class="htag">n</span> で設問を追加</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
         <h3>📄 草案の使い方</h3>
         <ul>
           <li>1つの設問に複数の草案を作って書き比べができる</li>
@@ -971,6 +986,8 @@
       setSyncStatus('synced');
       render();
       openDrawerOnStartup();
+      syncNavMode();
+      focusBody();   // 開いた瞬間から書き始められるように
       if(companies.length===0) offerLocalStorageRestore();
     } else {
       currentUser=null; companies=[]; activeCompanyId=null; activeYear=null; dataLoaded=false;
@@ -1028,7 +1045,7 @@
             if(yearTabsOn()) activeYear=coYear(c);
             activeCompanyId=c.id;c.activeQId=q.id;
             results.classList.remove('open');input.value='';
-            render();closeDrawerOnQuestionPick();
+            render();closeDrawerOnQuestionPick();focusBody();
           });
           results.appendChild(item);
         });
@@ -1284,7 +1301,7 @@
       const [moved]=qsArr.splice(fi,1);qsArr.splice(ti,0,moved);
       renderCompanyTree();scheduleSave();
     });
-    item.addEventListener('click',()=>{c.activeQId=q.id;renderCompanyTree();renderMain();closeDrawerOnQuestionPick();scheduleSave();});
+    item.addEventListener('click',()=>{c.activeQId=q.id;renderCompanyTree();renderMain();closeDrawerOnQuestionPick();focusBody();scheduleSave();});
     return item;
   }
 
@@ -1432,8 +1449,55 @@
   function gotoQuestion(c,qid){
     if(!qid) return;
     c.activeQId=qid;
-    renderCompanyTree();renderMain();scheduleSave();
+    renderCompanyTree();renderMain();revealActive();scheduleSave();
   }
+
+  // ── 企業の前後移動（↑↓）──
+  // 並びはサイドバーの表示順そのまま（compareCompanies）。端では移動先を null にする＝ループしない
+  function coNavState(){
+    const sorted=[...visibleCompanies()].sort((a,b)=>compareCompanies(a,b,companies));
+    const i=sorted.findIndex(c=>c.id===activeCompanyId);
+    if(i<0) return {prevId:null,nextId:null};
+    return {
+      prevId:i>0?sorted[i-1].id:null,
+      nextId:i<sorted.length-1?sorted[i+1].id:null,
+    };
+  }
+  function gotoCompany(cid){
+    if(!cid||cid===activeCompanyId) return;
+    activeCompanyId=cid;
+    render();revealActive();scheduleSave();
+  }
+  // 企業が増えると移動先がサイドバーの画面外に出るので、必要なときだけ寄せる
+  function revealActive(){
+    if(isMobile()&&!isDrawerOpen()) return;   // ドロワーが閉じているとサイドバーは画面外なので触らない
+    const el=document.querySelector('#companyTree .ctree-q.active')
+          ||document.querySelector('#companyTree .ctree-co.active');
+    if(el) el.scrollIntoView({block:'nearest'});
+  }
+
+  // ── 本文フォーカスと「移動モード」──
+  // 既定は本文にカーソルがある「書く」状態。Esc で抜けると矢印で移動できる（= 移動モード）。
+  // モバイルは矢印キーが無いうえ、自動フォーカスするとソフトキーボードで画面が潰れるので何もしない
+  const isTextTarget=t=>!!t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable);
+  let focusingBody=false;
+  function focusBody(){
+    if(isMobile()) return;
+    focusingBody=true;   // 描画待ちの間は body にフォーカスが無い状態になるので、その間だけ枠を出さない
+    setTimeout(()=>{
+      focusingBody=false;
+      const el=document.getElementById('cardText');
+      if(!el){syncNavMode();return;}
+      el.focus();
+      const n=el.value.length;el.setSelectionRange(n,n);  // カーソルは末尾＝続きから書ける
+    },50);
+  }
+  // 目印は「いま矢印が効くか」と常に一致させる（Esc だけでなくボタン操作で外れた場合も含む）
+  function syncNavMode(){
+    document.body.classList.toggle('nav-mode',!isMobile()&&!focusingBody&&!isTextTarget(document.activeElement));
+  }
+  document.addEventListener('focusin',syncNavMode);
+  document.addEventListener('focusout',()=>setTimeout(syncNavMode,0));  // focusout は移動先が決まる前に飛ぶ
 
   function renderMain(){
     const area=document.getElementById('mainContent');
@@ -1671,7 +1735,7 @@
         const [moved]=ds.splice(fi,1);ds.splice(ti,0,moved);
         render();scheduleSave();
       });
-      pill.addEventListener('click',()=>{if(q.activeDraftId!==d.id){q.activeDraftId=d.id;render();scheduleSave();}});
+      pill.addEventListener('click',()=>{if(q.activeDraftId!==d.id){q.activeDraftId=d.id;render();focusBody();scheduleSave();}});
       pillsEl.appendChild(pill);
     });
     const d=activeDraftForQ(q);
@@ -2132,17 +2196,47 @@ ${cur||'(まだ空)'}`+guidelineBlock();
   document.getElementById('btnMenu').addEventListener('click',e=>{e.stopPropagation();toggleDrawer();});
   document.getElementById('drawerBackdrop').addEventListener('click',()=>setDrawer(false));
 
+  // ── キーボード操作（マウスを触らずに 企業→設問→本文 まで行けるようにする）──
+  //   既定は本文にカーソル → Esc で抜けて移動モード → ↑↓ 企業 / ←→ 設問 → Enter で本文に戻る。
+  //   Enter を復帰キーにしているのは、移動モードではフォーカスが body にあって素の Enter が完全に空いているから
+  //   （Tab はブラウザ標準のフォーカス移動を奪うので触らない）。
+  //   Esc は本文を書いている最中にも効かせたいので、テキスト入力欄の早期 return より前に置く
+  const MODAL_IDS=['addCompanyBg','helpBg','addDraftBg','materialBg'];
+  const anyModalOpen=()=>MODAL_IDS.some(id=>{
+    const el=document.getElementById(id);return !!el&&el.classList.contains('open');
+  });
   document.addEventListener('keydown',e=>{
-    const tag=document.activeElement.tagName;
-    const ce=document.activeElement.contentEditable;
-    if(tag==='INPUT'||tag==='TEXTAREA'||ce==='true') return;
-    if(e.key==='n'||e.key==='N') addQuestion();
     if(e.key==='Escape'){
-      document.getElementById('addCompanyBg').classList.remove('open');
-      document.getElementById('helpBg').classList.remove('open');
-      document.getElementById('addDraftBg').classList.remove('open');
-      document.getElementById('materialBg').classList.remove('open');
-      setDrawer(false);
+      // 開いているものがあればまずそれを閉じる。何も開いていなければ本文を抜けて移動モードへ
+      if(anyModalOpen()||isDrawerOpen()){
+        MODAL_IDS.forEach(id=>{const el=document.getElementById(id);if(el) el.classList.remove('open');});
+        setDrawer(false);
+      } else if(isTextTarget(document.activeElement)){
+        document.activeElement.blur();
+      }
+      return;
+    }
+    if(isTextTarget(document.activeElement)) return;
+    if(e.metaKey||e.ctrlKey||e.altKey) return;   // ブラウザ標準のショートカットは奪わない
+    if(e.key==='n'||e.key==='N'){addQuestion();return;}
+
+    const c=activeCompany();
+    if(!c) return;
+    if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+      e.preventDefault();                        // ページスクロールを止める
+      const nav=coNavState();
+      gotoCompany(e.key==='ArrowUp'?nav.prevId:nav.nextId);
+      return;
+    }
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+      e.preventDefault();
+      const nav=qNavState(c);
+      gotoQuestion(c,e.key==='ArrowLeft'?nav.prevId:nav.nextId);
+      return;
+    }
+    if(e.key==='Enter'&&activeQuestion()){
+      e.preventDefault();
+      focusBody();
     }
   });
 
