@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESM — Entry Sheet Manager</title>
+<meta name="description" content="A single-file, zero-dependency web app for managing Japanese job-hunting essays. Built and shipped by Kohei Mukogawa; in real daily use.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='2' y='72' font-family='Lucida Console,monospace' font-size='54' font-weight='900' fill='%232563EB' letter-spacing='-6'%3EESM%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue: #2563EB;
+  --blue-dark: #1d4ed8;
+  --blue-soft: #eff4ff;
+  --blue-line: #bfcfff;
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --border: #e2e8f0;
+  --bg: #f3f4f8;
+  --card: #ffffff;
+  --ok: #10b981;
+  --warn: #b45309;
+  --warn-soft: #fef3c7;
+  --shadow: 0 2px 16px rgba(0,0,0,.04);
+  --shadow-lift: 0 12px 40px rgba(37,99,235,.10);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+a { color: inherit; }
+
+/* ── Shared type ── */
+.mono { font-family: 'DM Mono', ui-monospace, monospace; }
+.label {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 10px; color: var(--blue);
+  letter-spacing: .22em; text-transform: uppercase;
+  display: block; margin-bottom: 18px;
+}
+.h2 {
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 900; line-height: 1.14; letter-spacing: -.03em;
+}
+.h2 .gray { color: var(--text3); font-weight: 300; }
+.h2 .accent { color: var(--blue); }
+.lede { font-size: 15px; color: var(--text2); line-height: 1.85; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 56px; }
+.rule { max-width: 1120px; margin: 0 auto; padding: 0 56px; }
+.rule > div { border-top: 1px solid var(--border); }
+
+/* ── Nav ── */
+nav {
+  position: fixed; inset: 0 0 auto 0; z-index: 200;
+  height: 64px; padding: 0 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; text-decoration: none; }
+.nav-logo .b { color: var(--blue); }
+.nav-logo .g { color: var(--text3); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-link {
+  padding: 8px 14px; font-size: 13px; font-weight: 500;
+  color: var(--text2); text-decoration: none; border-radius: 8px; transition: all .15s;
+}
+.nav-link:hover { color: var(--blue); background: var(--blue-soft); }
+.nav-cta {
+  padding: 9px 20px; background: var(--blue); color: #fff;
+  border-radius: 9px; font-size: 13px; font-weight: 700; text-decoration: none;
+  transition: all .15s; box-shadow: 0 2px 12px rgba(37,99,235,.28);
+}
+.nav-cta:hover { background: var(--blue-dark); transform: translateY(-1px); }
+
+/* ── Hero ── */
+.hero {
+  min-height: 92vh; min-height: 92dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 140px 32px 60px;
+}
+.eyebrow {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 11px;
+  color: var(--blue); letter-spacing: .2em; text-transform: uppercase;
+  margin-bottom: 28px; display: flex; align-items: center; gap: 10px; justify-content: center;
+  opacity: 0; animation: fadeUp .6s .15s ease forwards;
+}
+.eyebrow::before, .eyebrow::after { content: ''; width: 28px; height: 1px; background: var(--blue-line); }
+.hero h1 {
+  font-size: clamp(40px, 6.4vw, 78px);
+  font-weight: 900; line-height: 1.06; letter-spacing: -.04em;
+  max-width: 15ch; margin-bottom: 26px;
+  opacity: 0; animation: fadeUp .7s .3s ease forwards;
+}
+.hero h1 .accent { color: var(--blue); }
+.hero h1 .light { color: var(--text3); font-weight: 300; }
+.hero-sub {
+  font-size: 16px; color: var(--text2); line-height: 1.85;
+  max-width: 54ch; margin-bottom: 40px;
+  opacity: 0; animation: fadeUp .6s .45s ease forwards;
+}
+.hero-sub b { color: var(--text); font-weight: 600; }
+.hero-btns {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  opacity: 0; animation: fadeUp .6s .6s ease forwards;
+}
+.btn-primary {
+  padding: 15px 34px; background: var(--blue); color: #fff;
+  border-radius: 12px; font-size: 15px; font-weight: 700; text-decoration: none;
+  transition: all .2s; box-shadow: 0 6px 24px rgba(37,99,235,.32);
+}
+.btn-primary:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 10px 32px rgba(37,99,235,.42); }
+.btn-ghost {
+  padding: 15px 26px; border: 1.5px solid var(--border); background: var(--card);
+  color: var(--text2); border-radius: 12px; font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: all .2s;
+}
+.btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+.hero-note {
+  margin-top: 20px; font-size: 12px; color: var(--text3);
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  opacity: 0; animation: fadeUp .5s .75s ease forwards;
+}
+.dot-live { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+@keyframes fadeUp { from { opacity:0; transform: translateY(22px); } to { opacity:1; transform:none; } }
+
+/* ── Proof strip ── */
+.proof {
+  max-width: 1120px; margin: 0 auto; padding: 0 56px 100px;
+}
+.proof-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--border); border-radius: 16px;
+  background: var(--card); box-shadow: var(--shadow); overflow: hidden;
+}
+.stat { padding: 26px 22px; border-right: 1px solid var(--border); }
+.stat:last-child { border-right: none; }
+.stat-n {
+  font-size: 28px; font-weight: 900; letter-spacing: -.03em;
+  line-height: 1.1; margin-bottom: 6px;
+}
+.stat-n small { font-size: 15px; font-weight: 600; color: var(--text3); letter-spacing: 0; }
+.stat-l { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+/* ── Generic section ── */
+.sec { max-width: 1120px; margin: 0 auto; padding: 96px 56px; }
+.sec-head { max-width: 640px; margin-bottom: 52px; }
+.sec-head .lede { margin-top: 18px; }
+
+/* ── Problem ── */
+.beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.beat {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 30px 26px; box-shadow: var(--shadow);
+}
+.beat-n {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 11px;
+  color: var(--blue); letter-spacing: .14em; margin-bottom: 14px;
+}
+.beat h3 { font-size: 16px; font-weight: 700; line-height: 1.45; margin-bottom: 10px; }
+.beat p { font-size: 13.5px; color: var(--text2); line-height: 1.85; }
+
+.northstar {
+  margin-top: 34px; padding: 30px 34px;
+  border-left: 3px solid var(--blue); background: var(--blue-soft);
+  border-radius: 0 14px 14px 0;
+}
+.northstar-l {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 10px;
+  color: var(--blue); letter-spacing: .2em; text-transform: uppercase; margin-bottom: 12px;
+}
+.northstar p { font-size: 19px; font-weight: 700; line-height: 1.55; letter-spacing: -.01em; }
+.northstar span { display: block; margin-top: 10px; font-size: 13px; font-weight: 400; color: var(--text2); line-height: 1.8; }
+
+/* ── Features (sticky) ── */
+.sticky-section {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 1120px; margin: 0 auto; padding: 0 56px; gap: 72px;
+}
+.sticky-left {
+  position: sticky; top: 50%; transform: translateY(-50%);
+  align-self: start; height: fit-content; padding: 80px 0;
+}
+.sticky-left .lede { margin-top: 18px; max-width: 34ch; }
+.sticky-right { padding: 110px 0; display: flex; flex-direction: column; gap: 18px; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+  padding: 28px 28px; box-shadow: var(--shadow);
+  transition: box-shadow .35s cubic-bezier(.25,.46,.45,.94), transform .35s cubic-bezier(.25,.46,.45,.94), border-color .35s, opacity .35s;
+  opacity: 0; transform: translateY(26px);
+}
+.card.visible { opacity: 1; transform: none; }
+.card:hover { box-shadow: var(--shadow-lift); transform: translateY(-4px); border-color: var(--blue-line); }
+.card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+.card-icon {
+  width: 42px; height: 42px; border-radius: 12px; background: var(--blue-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
+}
+.card-title { font-size: 16.5px; font-weight: 700; line-height: 1.42; padding-top: 3px; }
+.card-body { font-size: 13.5px; color: var(--text2); line-height: 1.85; }
+.card-tag {
+  display: inline-block; margin-top: 14px;
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 9.5px;
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid var(--blue-line); color: var(--blue);
+  letter-spacing: .08em; background: var(--blue-soft);
+}
+.card.accent-card { background: linear-gradient(135deg, #1e3a8a 0%, #2563EB 100%); border-color: transparent; }
+.card.accent-card .card-title { color: #fff; }
+.card.accent-card .card-body { color: rgba(255,255,255,.78); }
+.card.accent-card .card-icon { background: rgba(255,255,255,.15); }
+.card.accent-card .card-tag { border-color: rgba(255,255,255,.3); color: rgba(255,255,255,.92); background: rgba(255,255,255,.1); }
+
+/* ── Architecture ── */
+.arch {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 40px 36px; box-shadow: var(--shadow);
+}
+.arch-row { display: flex; align-items: stretch; gap: 18px; }
+.arch-col { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.node {
+  border: 1px solid var(--border); border-radius: 14px; padding: 18px 18px;
+  background: var(--bg);
+}
+.node.client { border-color: var(--blue-line); background: var(--blue-soft); }
+.node.secure { border-color: var(--blue-line); border-style: dashed; }
+.node-k {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 9.5px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px;
+}
+.node-t { font-size: 14.5px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+.node-d { font-size: 12.5px; color: var(--text2); line-height: 1.7; }
+.node code {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 11.5px;
+  background: var(--card); border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 5px; color: var(--blue);
+}
+.arch-arrow {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 11px;
+  color: var(--text3); letter-spacing: .08em; padding: 4px 0;
+}
+.arch-note {
+  margin-top: 24px; padding-top: 22px; border-top: 1px dashed var(--border);
+  font-size: 12.5px; color: var(--text2); line-height: 1.85;
+}
+
+/* ── Decisions ── */
+.decisions { display: flex; flex-direction: column; gap: 20px; }
+.dec {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 34px 34px; box-shadow: var(--shadow);
+  display: grid; grid-template-columns: 56px 1fr; gap: 24px;
+}
+.dec-n {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 22px; font-weight: 500;
+  color: var(--blue-line); line-height: 1.2;
+}
+.dec h3 { font-size: 20px; font-weight: 800; line-height: 1.35; letter-spacing: -.02em; margin-bottom: 18px; }
+.dec p { font-size: 13.5px; color: var(--text2); line-height: 1.9; }
+.dec p + p { margin-top: 14px; }
+.dec code {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 12px;
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 5px; color: var(--blue);
+}
+.tag {
+  display: inline-block; font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 5px; margin-right: 10px;
+  vertical-align: 2px; font-weight: 500;
+}
+.tag-why { background: var(--blue-soft); color: var(--blue); border: 1px solid var(--blue-line); }
+.tag-rej { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
+
+/* ── Security ── */
+.sec-list { display: flex; flex-direction: column; gap: 14px; }
+.sitem {
+  display: grid; grid-template-columns: 26px 1fr; gap: 16px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 22px 24px; box-shadow: var(--shadow);
+}
+.sitem-i { font-size: 15px; line-height: 1.6; }
+.sitem h4 { font-size: 14.5px; font-weight: 700; margin-bottom: 7px; line-height: 1.45; }
+.sitem p { font-size: 13px; color: var(--text2); line-height: 1.85; }
+.sitem code {
+  font-family: 'DM Mono', ui-monospace, monospace; font-size: 11.5px;
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 5px; color: var(--blue);
+}
+
+/* ── Not built ── */
+.notbuilt { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.nb-list { display: flex; flex-direction: column; gap: 2px; }
+.nb {
+  display: flex; gap: 14px; align-items: baseline;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.nb:last-child { border-bottom: none; }
+.nb-x { font-family: 'DM Mono', ui-monospace, monospace; font-size: 12px; color: var(--text3); flex-shrink: 0; }
+.nb-t { font-size: 14px; font-weight: 600; flex-shrink: 0; }
+.nb-r { font-size: 12.5px; color: var(--text2); line-height: 1.7; margin-left: auto; text-align: right; max-width: 22ch; }
+
+/* ── Next ── */
+.next-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+  padding: 30px 30px; box-shadow: var(--shadow);
+}
+.next-card h4 { font-size: 15.5px; font-weight: 700; margin-bottom: 10px; line-height: 1.45; }
+.next-card p { font-size: 13px; color: var(--text2); line-height: 1.85; }
+
+/* ── CTA ── */
+.cta { text-align: center; padding: 140px 56px; position: relative; overflow: hidden; }
+.cta::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(37,99,235,.07) 0%, transparent 70%);
+}
+.cta h2 {
+  font-size: clamp(30px, 4.6vw, 54px); font-weight: 900;
+  line-height: 1.12; letter-spacing: -.03em; margin-bottom: 18px;
+}
+.cta h2 .gray { color: var(--text3); font-weight: 300; }
+.cta-sub { font-size: 14px; color: var(--text2); line-height: 1.9; margin-bottom: 40px; }
+.cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.cta-fine {
+  margin-top: 26px; font-size: 12px; color: var(--text3); line-height: 1.8;
+  max-width: 46ch; margin-left: auto; margin-right: auto;
+}
+
+/* ── Footer ── */
+footer {
+  background: #0f172a; padding: 44px 56px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+}
+.foot-l { display: flex; flex-direction: column; gap: 8px; }
+.foot-name { font-size: 14px; font-weight: 700; color: #e2e8f0; }
+.foot-copy { font-size: 12px; color: #64748b; }
+.foot-r { display: flex; gap: 10px; flex-wrap: wrap; }
+.flink {
+  font-size: 12.5px; color: #94a3b8; text-decoration: none;
+  padding: 7px 14px; border: 1px solid #334155; border-radius: 8px; transition: all .15s;
+}
+.flink:hover { color: #fff; border-color: #64748b; }
+
+/* ── Dark mode ── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --blue: #60a5fa;
+    --blue-dark: #3b82f6;
+    --blue-soft: #16233d;
+    --blue-line: #2d4a7c;
+    --text: #e6edf6;
+    --text2: #9aa8bd;
+    --text3: #64748b;
+    --border: #1e293b;
+    --bg: #0b1120;
+    --card: #111a2e;
+    --warn: #fbbf24;
+    --warn-soft: #2a2011;
+    --shadow: 0 2px 16px rgba(0,0,0,.35);
+    --shadow-lift: 0 12px 40px rgba(0,0,0,.5);
+  }
+  .btn-primary { color: #06101f; box-shadow: 0 6px 24px rgba(96,165,250,.22); }
+  .btn-primary:hover { box-shadow: 0 10px 32px rgba(96,165,250,.3); }
+  .nav-cta { color: #06101f; box-shadow: 0 2px 12px rgba(96,165,250,.2); }
+  .card.accent-card { background: linear-gradient(135deg, #16233d 0%, #1e3a6b 100%); border-color: var(--blue-line); }
+  .card.accent-card .card-body { color: #b6c6dd; }
+  footer { background: #06101f; border-top: 1px solid var(--border); }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
+  .eyebrow, .hero h1, .hero-sub, .hero-btns, .hero-note { opacity: 1 !important; animation: none !important; }
+  .card { opacity: 1 !important; transform: none !important; }
+}
+
+/* ── Responsive (must stay last: media queries do not raise specificity) ── */
+@media (max-width: 980px) {
+  .proof-grid { grid-template-columns: 1fr 1fr; }
+  .stat:nth-child(2) { border-right: none; }
+  .stat:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .beats { grid-template-columns: 1fr; }
+  .notbuilt { grid-template-columns: 1fr; gap: 28px; }
+}
+@media (max-width: 860px) {
+  nav { padding: 0 20px; height: 58px; }
+  .nav-link { padding: 8px 10px; font-size: 12.5px; }
+  .nav-cta { padding: 8px 15px; font-size: 12.5px; }
+  .hero { padding: 120px 24px 48px; min-height: auto; }
+  .wrap, .rule, .sec, .proof { padding-left: 24px; padding-right: 24px; }
+  .sec { padding-top: 68px; padding-bottom: 68px; }
+  .proof { padding-bottom: 68px; }
+  .sticky-section { grid-template-columns: 1fr; gap: 0; padding: 0 24px; }
+  .sticky-left { position: relative; top: auto; transform: none; padding: 56px 0 28px; }
+  .sticky-right { padding: 0 0 68px; }
+  .arch { padding: 28px 22px; }
+  .arch-row { flex-direction: column; }
+  .dec { grid-template-columns: 1fr; gap: 14px; padding: 28px 24px; }
+  .dec-n { font-size: 18px; }
+  .dec h3 { font-size: 18px; }
+  .nb { flex-wrap: wrap; }
+  .nb-r { margin-left: 0; text-align: left; max-width: none; flex-basis: 100%; margin-top: 5px; }
+  .cta { padding: 90px 24px; }
+  footer { padding: 36px 24px; }
+}
+@media (max-width: 520px) {
+  .proof-grid { grid-template-columns: 1fr; }
+  .stat { border-right: none; border-bottom: 1px solid var(--border); }
+  .stat:last-child { border-bottom: none; }
+  .northstar { padding: 24px 22px; }
+  .northstar p { font-size: 17px; }
+  .hero-btns, .cta-btns { flex-direction: column; align-items: stretch; }
+  .btn-primary, .btn-ghost { text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ Nav ══ -->
+<nav>
+  <a class="nav-logo" href="#top"><span class="b">ES M</span><span class="g">anager</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="#engineering">Engineering</a>
+    <a class="nav-link" href="https://github.com/KoheiMukogawa/ESM" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="nav-link" href="landing.html">日本語</a>
+    <a class="nav-cta" href="https://koheimukogawa.github.io/ESM/" target="_blank" rel="noopener">Open the app →</a>
+  </div>
+</nav>
+
+<!-- ══ Hero ══ -->
+<section class="hero" id="top">
+  <div class="eyebrow">Personal project · Shipped · In daily use</div>
+  <h1>Japan's job hunt runs on <span class="accent">essays</span>.<br><span class="light">This is where they live.</span></h1>
+  <p class="hero-sub">
+    Japanese students apply to dozens of companies at once, and each one asks for an
+    <b>“entry sheet”</b> — a set of open-ended essays, a few hundred to a thousand characters each,
+    every one with its own deadline. ESM keeps all of them in a single screen,
+    with no ads and nothing blinking for attention.
+  </p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="https://koheimukogawa.github.io/ESM/" target="_blank" rel="noopener">Open the live app →</a>
+    <a class="btn-ghost" href="https://github.com/KoheiMukogawa/ESM" target="_blank" rel="noopener">Read the source ↗</a>
+  </div>
+  <p class="hero-note"><span class="dot-live"></span> Live in production — not a demo or a mockup</p>
+</section>
+
+<!-- ══ Proof ══ -->
+<div class="proof">
+  <div class="proof-grid">
+    <div class="stat">
+      <div class="stat-n">169</div>
+      <div class="stat-l">commits over six months of continuous development</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">2,504 <small>lines</small></div>
+      <div class="stat-l">the entire frontend, in one <span class="mono">index.html</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">0</div>
+      <div class="stat-l">frontend dependencies, and no build step</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">10+</div>
+      <div class="stat-l">job-hunting students it has been shared with</div>
+    </div>
+  </div>
+</div>
+
+<div class="rule"><div></div></div>
+
+<!-- ══ Problem ══ -->
+<section class="sec">
+  <div class="sec-head">
+    <span class="label">Why I built it</span>
+    <h2 class="h2">The tools existed.<br><span class="gray">They were the problem.</span></h2>
+  </div>
+  <div class="beats">
+    <div class="beat">
+      <div class="beat-n">01</div>
+      <h3>Writing was the easy part</h3>
+      <p>The hard part was holding everything in your head at once: what you already wrote for four other companies, which deadline is closest, whether this firm rejected you before the interview or after.</p>
+    </div>
+    <div class="beat">
+      <div class="beat-n">02</div>
+      <h3>So it lived in six places</h3>
+      <p>Drafts in a docs app, deadlines in a spreadsheet, character counts in a free web counter covered in ads, company logins in a notes file. Every switch cost attention I did not have.</p>
+    </div>
+    <div class="beat">
+      <div class="beat-n">03</div>
+      <h3>The services meant to help made it worse</h3>
+      <p>The existing job-hunting platforms are free because they sell your attention. Banner ads, push notifications, recommended listings. I burned out on them, and built the opposite.</p>
+    </div>
+  </div>
+
+  <div class="northstar">
+    <div class="northstar-l">North Star</div>
+    <p>“Everything for the job hunt, in one place, without stealing your focus.”
+      <span>Every feature proposal gets one question: <b>does it remove a real friction in the workflow, or is it a feature for its own sake?</b> The second half of that sentence is what kills most ideas — including several of my own, listed further down.</span>
+    </p>
+  </div>
+</section>
+
+<div class="rule"><div></div></div>
+
+<!-- ══ Features ══ -->
+<div class="sticky-section" style="padding-top:60px;">
+  <div class="sticky-left">
+    <span class="label">The product</span>
+    <h2 class="h2">Six things,<br>done <span class="accent">properly</span></h2>
+    <p class="lede">There is no feature list competition here. These are the frictions that actually showed up while applying, and nothing else made the cut.</p>
+  </div>
+  <div class="sticky-right">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🗂️</div>
+        <div class="card-title">One screen: company → question → draft</div>
+      </div>
+      <p class="card-body">A three-level tree. Pick a company in the sidebar, a question inside it, and a draft of that answer. Multiple drafts per question live side by side, so you can rewrite without destroying the version you liked.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">☁️</div>
+        <div class="card-title">Two independent ways to not lose your work</div>
+      </div>
+      <p class="card-body">Every edit is saved to Firestore on a 1.5-second debounce. Separately, the last five generations are kept in browser storage. Cloud and local fail for different reasons, which is the point — one is a backup for the other, not a copy of it.</p>
+      <span class="card-tag">Reliability</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">⏰</div>
+        <div class="card-title">Deadlines that sort themselves</div>
+      </div>
+      <p class="card-body">Any company can carry dated tasks — submit the essay, finish the aptitude test, take the web test. The sidebar reorders itself by whatever is due next, and overdue items sink to the bottom instead of squatting at the top just because their date is oldest.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📚</div>
+        <div class="card-title">A material library you assemble from</div>
+      </div>
+      <p class="card-body">Your life history, your accomplishments, your self-PR, the core of why you want the job — written once, kept in one place. Company number twelve is assembled from material, not written from an empty page.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">⌨️</div>
+        <div class="card-title">Operable without touching the mouse</div>
+      </div>
+      <p class="card-body">The cursor starts in the essay body. <span class="mono">Esc</span> leaves it for navigation mode, arrows move between companies and questions, <span class="mono">Enter</span> drops you back into the text. Two bindings that would normally collide, separated by an explicit mode instead of by cleverness.</p>
+    </div>
+
+    <div class="card accent-card">
+      <div class="card-header">
+        <div class="card-icon">✨</div>
+        <div class="card-title">Claude, inside the drafting flow</div>
+      </div>
+      <p class="card-body">Draft from your own material, refine what you wrote, suggest angles you have not tried, or interview you to pull a life history out of you. Streamed token by token through an authenticated proxy — and deliberately built into the existing draft editor rather than bolted on as an “AI tab”.</p>
+      <span class="card-tag">Closed testing</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="rule"><div></div></div>
+
+<!-- ══ Architecture ══ -->
+<section class="sec">
+  <div class="sec-head">
+    <span class="label">Architecture</span>
+    <h2 class="h2">Static page,<br><span class="gray">serious back end</span></h2>
+    <p class="lede">The frontend is a single HTML file served from GitHub Pages. Everything that needs to be trusted happens somewhere the browser cannot reach.</p>
+  </div>
+
+  <div class="arch">
+    <div class="arch-row">
+      <div class="arch-col">
+        <div class="node client">
+          <div class="node-k">Client</div>
+          <div class="node-t">index.html</div>
+          <div class="node-d">2,504 lines of vanilla HTML, CSS and JS. No framework, no bundler, no npm. Served as a static file from GitHub Pages.</div>
+        </div>
+        <div class="arch-arrow">│ Google sign-in</div>
+        <div class="node">
+          <div class="node-k">Identity</div>
+          <div class="node-t">Firebase Auth</div>
+          <div class="node-d">Issues the signed ID token that everything downstream checks.</div>
+        </div>
+      </div>
+
+      <div class="arch-col">
+        <div class="node">
+          <div class="node-k">Storage</div>
+          <div class="node-t">Cloud Firestore</div>
+          <div class="node-d">One document per user: <code>users/{uid}</code>. One read on login, one debounced write to save. Rules allow access only when <code>request.auth.uid == userId</code>.</div>
+        </div>
+        <div class="node">
+          <div class="node-k">Local</div>
+          <div class="node-t">Browser storage</div>
+          <div class="node-d">Five most recent generations, kept independently of the cloud path.</div>
+        </div>
+      </div>
+
+      <div class="arch-col">
+        <div class="node secure">
+          <div class="node-k">Trust boundary</div>
+          <div class="node-t">Cloud Functions <code>ai</code></div>
+          <div class="node-d">Gen 2, Node 20, <span class="mono">asia-northeast1</span>. Verifies the ID token, checks the caller against a fail-closed allowlist, then relays to Claude over SSE. CORS restricted to the production origin and localhost.</div>
+        </div>
+        <div class="arch-arrow">│ API key from Secret Manager</div>
+        <div class="node">
+          <div class="node-k">External</div>
+          <div class="node-t">Claude API</div>
+          <div class="node-d">Streaming completions, proxied straight back to the browser.</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="arch-note">
+      <b>The shape in one sentence:</b> a static page talks to Firestore under owner-only rules,
+      and everything involving a secret is pushed behind a Cloud Function that the client cannot bypass.
+      There is no server to operate and no container to patch.
+    </p>
+  </div>
+</section>
+
+<div class="rule"><div></div></div>
+
+<!-- ══ Engineering decisions ══ -->
+<section class="sec" id="engineering">
+  <div class="sec-head">
+    <span class="label">Engineering decisions</span>
+    <h2 class="h2">Three calls,<br>and what I <span class="accent">turned down</span></h2>
+    <p class="lede">The choice is only half of a decision. Each of these lists the alternative I rejected and why, because that is where the actual reasoning lives.</p>
+  </div>
+
+  <div class="decisions">
+
+    <article class="dec">
+      <div class="dec-n">01</div>
+      <div>
+        <h3>One HTML file. No bundler, no framework.</h3>
+        <p><span class="tag tag-why">Why</span>The product's entire premise is that it does not steal your attention, and I wanted the same property in the codebase. At this scale, a build pipeline is maintenance I pay for forever — dependency upgrades, config drift, a CI job to keep green — against value I would never collect. Local development is <code>python3 -m http.server</code>. Deployment is <code>git push</code>.</p>
+        <p><span class="tag tag-rej">Rejected</span>React or Vue on Vite, which is the reflex answer. At 2,500 lines, the bundler's overhead costs more than the component model returns, and <code>node_modules</code> is a security surface I would then have to watch. I would choose differently at 20,000 lines; I would rather be accurate about the size I am actually at than build for the project I imagine having.</p>
+      </div>
+    </article>
+
+    <article class="dec">
+      <div class="dec-n">02</div>
+      <div>
+        <h3>All of a user's data in a single Firestore document.</h3>
+        <p><span class="tag tag-why">Why</span>There are exactly two Firestore calls in the whole frontend: one <code>get()</code> on login, and one debounced <code>set()</code> that writes the entire company → question → draft tree at once. A single-document <code>set()</code> is atomic in Firestore, so a partial write is <b>structurally impossible</b> — the tree can never end up half-updated. It also bounds usage at one read per session and at most one write every 1.5 seconds.</p>
+        <p><span class="tag tag-rej">Rejected</span>Splitting into <code>companies/{id}</code> and <code>questions/{id}</code> subcollections — the normalized shape a reviewer would expect. Editing one deeply nested field would then mean writing several documents, any of which can fail independently, and I would be writing reconciliation logic to repair states that the single-document design simply cannot enter. The payoff would be query efficiency I do not need at a few dozen companies per user.</p>
+      </div>
+    </article>
+
+    <article class="dec">
+      <div class="dec-n">03</div>
+      <div>
+        <h3>The browser never touches the Claude API.</h3>
+        <p><span class="tag tag-why">Why</span>A Cloud Function verifies the Firebase ID token, checks the caller against an allowlist, and only then relays the request. The API key exists solely in Secret Manager and is read as an environment variable inside the function. That is three independent layers — secret isolation, identity, authorization — and none of them require the frontend to know anything it could leak.</p>
+        <p><span class="tag tag-rej">Rejected</span>Calling Anthropic directly from the browser. This was never genuinely a candidate, but it is the shortcut a prototype reaches for, so it is worth naming: anything in client-side JavaScript is extractable, and an extracted key is a stranger spending my money until I notice.</p>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<div class="rule"><div></div></div>
+
+<!-- ══ Security ══ -->
+<section class="sec">
+  <div class="sec-head">
+    <span class="label">Security model</span>
+    <h2 class="h2">What is secret,<br><span class="gray">and what only looks like it</span></h2>
+    <p class="lede">The repository is public, which forces the question to be answered precisely rather than by instinct.</p>
+  </div>
+
+  <div class="sec-list">
+    <div class="sitem">
+      <div class="sitem-i">🔑</div>
+      <div>
+        <h4>The Claude API key is a real secret, and lives in one place</h4>
+        <p>Google Secret Manager, injected into the function's environment at runtime. Never in the client, never in the repository, never in an environment file that could be committed by accident.</p>
+      </div>
+    </div>
+
+    <div class="sitem">
+      <div class="sitem-i">🪪</div>
+      <div>
+        <h4>The Firebase <code>apiKey</code> in the client is <em>not</em> a secret</h4>
+        <p>It is a public project identifier — Firebase's own documentation says so. Treating it as secret would be cargo-cult security: it would buy nothing, and it would suggest the real access control lives in hiding that string. It does not. It lives in the Firestore rules and in the function.</p>
+      </div>
+    </div>
+
+    <div class="sitem">
+      <div class="sitem-i">🔒</div>
+      <div>
+        <h4>Firestore rules are owner-only, and checked into the repo</h4>
+        <p><code>allow read, write: if request.auth != null &amp;&amp; request.auth.uid == userId</code>. The rules file in the repository is the deployed rule set, pulled from production rather than written from memory, so it cannot quietly drift out of sync with what is live.</p>
+      </div>
+    </div>
+
+    <div class="sitem">
+      <div class="sitem-i">🚫</div>
+      <div>
+        <h4>The allowlist fails closed</h4>
+        <p>If the list is unset, empty, or fails to load, <b>everyone is denied</b> — including a caller holding a perfectly valid ID token. An earlier version skipped the check entirely when the list came back empty. I changed it, because “misconfigured, so nobody gets in” is recoverable and “misconfigured, so anybody gets in” is not.</p>
+      </div>
+    </div>
+
+    <div class="sitem">
+      <div class="sitem-i">📋</div>
+      <div>
+        <h4>User IDs were externalized too — for a different reason</h4>
+        <p>The allowlist holds real UIDs of two identifiable people, and this repo is public. A UID is not usable without a signed token, so it is not a secret; it went into Secret Manager anyway, to keep one operational path for values that leave the codebase instead of two.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="rule"><div></div></div>
+
+<!-- ══ Not built ══ -->
+<section class="sec">
+  <div class="sec-head">
+    <span class="label">Restraint</span>
+    <h2 class="h2">What I decided<br><span class="gray">not to build</span></h2>
+    <p class="lede">A product whose promise is “does not steal your focus” is mostly defined by its refusals. Each of these was designed far enough to be rejected on the merits.</p>
+  </div>
+
+  <div class="notbuilt">
+    <div class="nb-list">
+      <div class="nb">
+        <span class="nb-x">✕</span><span class="nb-t">Push notifications</span>
+        <span class="nb-r">The exact mechanism I built this to escape</span>
+      </div>
+      <div class="nb">
+        <span class="nb-x">✕</span><span class="nb-t">Calendar view</span>
+        <span class="nb-r">A second place for dates to disagree with the first</span>
+      </div>
+      <div class="nb">
+        <span class="nb-x">✕</span><span class="nb-t">“Generate three full drafts”</span>
+        <span class="nb-r">Litters the workspace; one suggested angle beats three finished essays</span>
+      </div>
+      <div class="nb">
+        <span class="nb-x">✕</span><span class="nb-t">Command palette</span>
+        <span class="nb-r">Discovery cost too high for a tool this small</span>
+      </div>
+      <div class="nb">
+        <span class="nb-x">✕</span><span class="nb-t">Scroll-to-advance</span>
+        <span class="nb-r">Cheap to build, nobody would ever find it</span>
+      </div>
+      <div class="nb">
+        <span class="nb-x">✕</span><span class="nb-t">Duplicate-draft button</span>
+        <span class="nb-r">Shipped, then removed — it made more drafts, not better ones</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="next-card">
+        <h4>What is next</h4>
+        <p><b>Company research grounded in web search.</b> The obvious version — asking the model what it knows about a firm — is the wrong one: a knowledge cutoff plus a confident tone is exactly how a student walks into an interview citing something that was never true. If this ships, every claim carries a source and it is framed as reference material, never as fact.</p>
+        <p>Also on the list: an English README, so that the link above leads somewhere readable for anyone who does not read Japanese.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<div class="cta">
+  <span class="label" style="text-align:center;">Have a look</span>
+  <h2>See it running,<br><span class="gray">or read the code</span></h2>
+  <p class="cta-sub">Both are open. Sign in with Google and the app is immediately usable.</p>
+  <div class="cta-btns">
+    <a class="btn-primary" href="https://koheimukogawa.github.io/ESM/" target="_blank" rel="noopener">Open the live app →</a>
+    <a class="btn-ghost" href="https://github.com/KoheiMukogawa/ESM" target="_blank" rel="noopener">Read the source ↗</a>
+  </div>
+  <p class="cta-fine">Heads up: the application's interface is in Japanese, since the students using it are. The repository's README documents the architecture and design decisions in Japanese as well — an English version is in progress.</p>
+</div>
+
+<!-- ══ Footer ══ -->
+<footer>
+  <div class="foot-l">
+    <div class="foot-name">ESM — Entry Sheet Manager</div>
+    <div class="foot-copy">© 2026 Kohei Mukogawa · Built, shipped and maintained solo</div>
+  </div>
+  <div class="foot-r">
+    <a class="flink" href="https://koheimukogawa.github.io/ESM/" target="_blank" rel="noopener">Live app</a>
+    <a class="flink" href="https://github.com/KoheiMukogawa/ESM" target="_blank" rel="noopener">GitHub</a>
+    <a class="flink" href="landing.html">日本語版</a>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), 60);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.card').forEach(c => io.observe(c));
+</script>
+</body>
+</html>
