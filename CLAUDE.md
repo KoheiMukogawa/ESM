@@ -38,7 +38,9 @@ ESM（ES Manager）= 就活のエントリーシート(ES)を一元管理する�
 - **Functionsデプロイ**：`firebase deploy --only functions`（要 `firebase login`＋Blazeプラン）。
   - 初回や久々のデプロイで `iam.serviceaccounts.actAs` の **403** が出たら、IAM伝播待ちの一過性。**1〜2分待って再実行**で通る。
 - **シークレット設定**：`firebase functions:secrets:set ANTHROPIC_API_KEY`。**対話式なので実ターミナルで**（`!`経由や非対話シェルは「Cannot run in non-interactive mode」で失敗）。値は**1行・余分な改行や“…”を含めない**（混入すると `not a legal HTTP header value` で失敗する）。
-- **git**：remoteはHTTPS。push は classic PAT 認証で**実ターミナルから** `git push`。`main` が本番なので **push＝本番反映** に直結する点に注意。
+- **git**：remoteはHTTPS。認証は classic PAT を `credential.helper=store` で保存済み（`~/.git-credentials` に**平文**・1エントリ）。このため `git push` は**非対話シェルからでも通る**（Claude Code から直接実行してよい。2026-09-19に実績あり）。
+  - ⚠️ 平文保存なので `~/.git-credentials` を共有ディレクトリやリポジトリ内へコピーしない。PATを失効・再発行したら同ファイルの該当行を消して再認証する。
+  - `main` が本番なので **push＝本番反映** に直結する点に注意。
 - **コスト**：Opus 4.8 = 入力$5/出力$25 per 1M tokens。個人利用なら1操作あたり数円〜。Anthropicのクレジットは前払い（Firebaseの課金とは別アカウント・別請求）。
 
 ## コーディング規約
