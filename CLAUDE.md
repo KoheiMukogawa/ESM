@@ -3,7 +3,7 @@
 このファイルは Claude Code が自動で読み込むプロジェクト指針です。アーキテクチャが変わったら必ず更新してください。作業履歴は `PROGRESS.md` を参照。
 
 ## プロジェクト概要
-ESM（ES Manager）= 就活のエントリーシート(ES)を一元管理する個人用Webアプリ。広告だらけで集中できない既存サービスへの不満から自作。利用者は作者本人＋弟（2026年前半に就活開始、実ユーザー）の2名。
+ESM（ES Manager）= 就活のエントリーシート(ES)を一元管理する個人用Webアプリ。広告だらけで集中できない既存サービスへの不満から自作。10人以上の就活生に配布済み（継続利用の有無は未追跡＝外向きには「配布した」までしか主張しないこと）。うち作者本人＋弟（2026年前半に就活開始）が実ユーザー。
 
 ## 北極星と設計原則（非交渉 — 新機能の採否はこれで判断）
 北極星：**「就活のすべてを、集中を奪わずに、1つで。」** 拡張は手段、集中とシンプルが目的。
@@ -16,7 +16,7 @@ ESM（ES Manager）= 就活のエントリーシート(ES)を一元管理する�
 核心の緊張：「1つで完結（拡張）」と「シンプル（抑制）」は引っ張り合う。放置すると本人が嫌った"集中を奪うアプリ"に化ける。新機能は必ずこう問う——**「就活ワークフローの実在する摩擦を消すか？ それとも機能のための機能か？」**。AIは“貼り付けた別機能”にせず、既存の素材庫・草案の導線に自然に溶け込ませる（足したと気づかないくらいに）。
 
 ## アーキテクチャ
-- **フロント**：`index.html` 単一ファイルにHTML/CSS/JSを全内包（約2100行・バニラJS・ビルドツールなし）。`landing.html` は別のランディングページ。
+- **フロント**：`index.html` 単一ファイルにHTML/CSS/JSを全内包（約2500行・バニラJS・ビルドツールなし）。`landing.html`（日本語）と `landing.en.html`（英語・海外インターン応募向けのポートフォリオ兼紹介ページ）は別のランディングページ。
 - **ホスティング**：GitHub Pages、`main` ブランチから配信。本番 = https://koheimukogawa.github.io/ESM/ 。
   - ⚠️ GitHub Pages（無料プラン）は **publicリポジトリ必須**。非公開化するとサイトが落ちる（Firebase Hosting に移行する場合を除く）。
 - **認証**：Firebase Auth（Googleログイン）。Firebaseプロジェクト = `escounter-d9db7`。
@@ -29,9 +29,9 @@ ESM（ES Manager）= 就活のエントリーシート(ES)を一元管理する�
 ## セキュリティモデル（重要）
 - **Claude APIキー（sk-ant-…）は本物の秘密** → Google Secret Manager に格納（`ANTHROPIC_API_KEY`）。フロントにもリポジトリにも**絶対に置かない**。新しいキー版を作ったら**再デプロイで反映**。
 - **Firebaseの apiKey は秘密ではない**（公開してよい識別子）。`index.html` にあってOK。
-- **アクセス制御**：`functions/index.js` が許可ユーザーを本人＋弟の2 UIDに限定。UID一覧は Secret Manager `ALLOWED_UIDS`（カンマ区切り文字列、`ANTHROPIC_API_KEY` と同じ `secrets: [...]` 経由）として外部化済み（public リポジトリに実UIDを平文で置かないため）。**fail-closed**：allowlistが空・未設定・読み込み失敗なら誰であっても拒否する（旧実装は空なら判定自体をスキップしていた穴があったため、外部化と同時に修正済み）。
+- **アクセス制御**：`functions/index.js` が許可ユーザーを本人＋弟の2 UIDに限定（**AI機能のみ**。アプリ本体はFirestoreルールで認証済みユーザーなら誰でも自分のデータを読み書きできるので、配布人数とは別物）。UID一覧は Secret Manager `ALLOWED_UIDS`（カンマ区切り文字列、`ANTHROPIC_API_KEY` と同じ `secrets: [...]` 経由）として外部化済み（public リポジトリに実UIDを平文で置かないため）。**fail-closed**：allowlistが空・未設定・読み込み失敗なら誰であっても拒否する（旧実装は空なら判定自体をスキップしていた穴があったため、外部化と同時に修正済み）。
 - **CORS**：`https://koheimukogawa.github.io` ＋ `localhost:8000/5500` のみ許可。
-- **Firestoreルール**：`users/{userId}` を `request.auth != null && request.auth.uid == userId` で本人のみ read/write（テストモードではない・安全）。コンソール管理（リポジトリ未管理）。将来サブコレクション化するならルール拡張が必要。
+- **Firestoreルール**：`users/{userId}` を `request.auth != null && request.auth.uid == userId` で本人のみ read/write（テストモードではない・安全）。`firestore.rules` としてリポジトリ管理下にある（本番から取得して同期したもの）。将来サブコレクション化するならルール拡張が必要。
 
 ## 開発ワークフロー
 - **ローカル確認**：`python3 -m http.server 8000 --directory <repo>` → http://localhost:8000/ 。:8000 はCORS許可済み。Firebase Auth は `localhost` を既定で許可ドメインとして扱う。
