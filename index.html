@@ -584,6 +584,7 @@
             </div>
             <button class="menu-item" id="btnMaterial">📚 素材庫</button>
             <button class="menu-item" id="btnGuide"><svg viewBox="0 0 12 8" width="17" height="12" shape-rendering="crispEdges" aria-hidden="true" style="vertical-align:-2px;margin-right:7px"><rect x="2" y="0" width="8" height="1" fill="#D77655"/><rect x="2" y="1" width="1" height="1" fill="#D77655"/><rect x="3" y="1" width="1" height="1" fill="#1A1A1A"/><rect x="4" y="1" width="4" height="1" fill="#D77655"/><rect x="8" y="1" width="1" height="1" fill="#1A1A1A"/><rect x="9" y="1" width="1" height="1" fill="#D77655"/><rect x="0" y="2" width="12" height="1" fill="#D77655"/><rect x="0" y="3" width="12" height="1" fill="#D77655"/><rect x="2" y="4" width="8" height="1" fill="#D77655"/><rect x="2" y="5" width="8" height="1" fill="#D77655"/><rect x="2" y="6" width="1" height="1" fill="#D77655"/><rect x="4" y="6" width="1" height="1" fill="#D77655"/><rect x="7" y="6" width="1" height="1" fill="#D77655"/><rect x="9" y="6" width="1" height="1" fill="#D77655"/><rect x="2" y="7" width="1" height="1" fill="#D77655"/><rect x="4" y="7" width="1" height="1" fill="#D77655"/><rect x="7" y="7" width="1" height="1" fill="#D77655"/><rect x="9" y="7" width="1" height="1" fill="#D77655"/></svg>Claudeへの指示</button>
+            <button class="menu-item" id="btnExport">📤 全体を書き出す</button>
             <button class="menu-item" id="btnHelp">？ 使い方</button>
             <button class="btn-logout" id="btnLogout">ログアウト</button>
           </div>
@@ -2383,6 +2384,80 @@ ${cur||'(まだ空)'}`+guidelineBlock();
   // API送信用：会話の先頭がassistant（あいさつ）なら落として必ずuser始まりにする
   function apiMsgs(arr){ const a=arr.map(m=>({role:m.role,content:m.content})); while(a.length && a[0].role==='assistant') a.shift(); return a; }
 
+  // ── 全体を書き出す ──
+  // ChatGPT/Claude のプロジェクトに1ファイル置いて、「自分のことを知っている状態」で相談するための書き出し。
+  // マイページのURL・ログインIDは外部AIに渡す理由がないので含めない。
+  // AI相談の会話履歴(d.chat)も含めない（草案という結論があれば足りるし、量が膨らんで本体を薄める）。
+  function exportAll(){
+    const today=todayStr();
+    const L=[];
+    L.push(`# 就活データ（ESM から書き出し・${today}）`,'');
+
+    // 素材庫
+    L.push('## 素材庫','');
+    let matCount=0;
+    MAT_CATS.filter(cat=>cat!=='すべて').forEach(cat=>{
+      const list=(materials||[]).filter(m=>m.cat===cat&&(m.text||'').trim());
+      if(!list.length) return;
+      L.push(`### ${cat}`,'');
+      list.forEach(m=>{
+        matCount++;
+        L.push(`#### ${(m.title||'').trim()||'(無題)'}`,'',(m.text||'').trim(),'');
+      });
+    });
+    if(!matCount) L.push('(まだ素材がありません)','');
+
+    // 企業（年度タブが出ているときだけ年度で見出しを分ける）
+    const groups=yearTabsOn()
+      ? usedYears().map(y=>({label:`${y}卒`,list:companies.filter(c=>coYear(c)===y)}))
+      : [{label:null,list:companies}];
+    const RESULT_LABEL={pass:'通過',pending:'結果待ち'};
+    groups.forEach(g=>{
+      if(!g.list.length) return;
+      L.push(g.label?`## 企業（${g.label}）`:'## 企業','');
+      [...g.list].sort((a,b)=>compareCompanies(a,b,companies)).forEach(c=>{
+        L.push(`### ${(c.name||'').trim()||'(無題)'}`,'');
+        const meta=[];
+        if(c.deadline) meta.push(`ES締切: ${c.deadline}`);
+        if(c.submitted){
+          meta.push('ES提出済み');
+          if(c.result==='fail') meta.push(`選考結果: ${failBadgeLabel(c)}`+((c.failMemo||'').trim()?`（${c.failMemo.trim()}）`:''));
+          else if(RESULT_LABEL[c.result]) meta.push(`選考結果: ${RESULT_LABEL[c.result]}`);
+        }
+        const todo=(c.tasks||[]).filter(t=>!t.done&&t.name);
+        if(todo.length) meta.push('未完了の作業: '+todo.map(t=>t.name+(t.due?`（${t.due}）`:'')).join('、'));
+        if(meta.length) L.push(meta.map(s=>`- ${s}`).join('\n'),'');
+        const qs=c.questions||[];
+        if(!qs.length){L.push('(設問はまだありません)','');return;}
+        qs.forEach((q,i)=>{
+          L.push(`#### ${(q.label||'').trim()||`設問${i+1}`}${q.limit?`（${q.limit}字）`:''}`,'');
+          // 草案は全部出す（没にした案も「なぜそうしなかったか」の材料になる）。
+          // 中身もメモも空の草案だけは、ノイズなので落とす。
+          const ds=(q.drafts||[]).filter(d=>(d.text||'').trim()||(d.memo||'').trim());
+          if(!ds.length){L.push('(未記入)','');return;}
+          ds.forEach((d,j)=>{
+            // 完了チェック済み＝確定稿。企業がES提出済みなら、それが実際に出した版
+            const mark=d.done?(c.submitted?'　★ 実際に提出した版':'　★ 確定稿'):'';
+            L.push(`##### ${(d.name||'').trim()||`草案${j+1}`}${mark}`,'');
+            const text=(d.text||'').trim();
+            if(text) L.push(text,'');
+            const memo=(d.memo||'').trim();
+            if(memo) L.push('**メモ**','',memo.split('\n').map(s=>`> ${s}`).join('\n'),'');
+          });
+        });
+      });
+    });
+
+    const md=L.join('\n').replace(/\n{3,}/g,'\n\n')+'\n';
+    const url=URL.createObjectURL(new Blob([md],{type:'text/markdown;charset=utf-8'}));
+    const a=document.createElement('a');
+    a.href=url; a.download=`esm-${today}.md`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    document.getElementById('userDropdown').classList.remove('open');
+  }
+
+  document.getElementById('btnExport').addEventListener('click',exportAll);
   document.getElementById('btnMaterial').addEventListener('click',openMaterialModal);
   document.getElementById('btnGuide').addEventListener('click',openGuideModal);
   document.getElementById('guideClose').addEventListener('click',closeGuideModal);
